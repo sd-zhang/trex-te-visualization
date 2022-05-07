@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello World</title>
+  <style>* {padding: 0; margin: 0}</style>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>
+  <script type="text/javascript">
+    let type = "WebGL";
+    if (!PIXI.utils.isWebGLSupported()) {
+      type = "canvas";
+    }
+
+    //Create a Pixi Application
+    const app = new PIXI.Application({
+        width: 256,         // default: 800
+        height: 256,        // default: 600
+        antialias: true,    // default: false
+        transparent: false, // default: false
+        resolution: 1       // default: 1
+    });
+
+    app.renderer.backgroundColor = 0x000000;
+    app.renderer.autoDensity = true;
+    app.resizeTo = window;
+    //Add the canvas that Pixi automatically created for you to the HTML document
+    document.body.appendChild(app.view);
+
+    PIXI.Loader.shared
+    .add("rex_sprite", "images/rex.png")
+    .add("dabrex_sprite", "images/dabrex.png")
+    .load(setup);
+
+    function setup() {
+        const rex_sprite = new PIXI.Sprite(
+            PIXI.Loader.shared.resources.rex_sprite.texture);
+        app.stage.addChild(rex_sprite);
+    }
+
+    PIXI.utils.sayHello(type);
+  </script>
+</body>
+</html>
