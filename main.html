@@ -13,8 +13,18 @@
       type = "canvas";
     }
 
+    //Aliases
+    const Application = PIXI.Application,
+          Container = PIXI.Container,
+          loader = PIXI.Loader.shared,
+          resources = PIXI.Loader.shared.resources,
+          TextureCache = PIXI.utils.TextureCache,
+          Sprite = PIXI.Sprite,
+          Rectangle = PIXI.Rectangle
+          Graphics = PIXI.Graphics
+
     //Create a Pixi Application
-    const app = new PIXI.Application({
+    const app = new Application({
         width: 256,         // default: 800
         height: 256,        // default: 600
         antialias: true,    // default: false
@@ -28,16 +38,40 @@
     //Add the canvas that Pixi automatically created for you to the HTML document
     document.body.appendChild(app.view);
 
-    PIXI.Loader.shared
+    loader
     .add("rex_sprite", "images/rex.png")
     .add("dabrex_sprite", "images/dabrex.png")
     .load(setup);
 
     function setup() {
-        const rex_sprite = new PIXI.Sprite(
-            PIXI.Loader.shared.resources.rex_sprite.texture);
+        const rex_sprite = new PIXI.Sprite(PIXI.Loader.shared.resources.rex_sprite.texture);
+
+        const dabrex_sprite = new PIXI.Sprite(PIXI.Loader.shared.resources.dabrex_sprite.texture);
+        dabrex_sprite.position.set(200, 0)
+
+        
+        line.x = 32;
+        line.y = 32;
+        
+
         app.stage.addChild(rex_sprite);
+        app.stage.addChild(dabrex_sprite);
+        
     }
+    const line = new Graphics();
+    // line.lineStyle({width: 4, color: 0xFFFFFF, alpha: 1});
+    // line.moveTo(0, 0);
+    // line.lineTo(200, 2000);
+    // line.x = 200;
+    // line.y = 200;
+
+    const graphics = new Graphics();
+    graphics.beginFill(0xDE3249);
+    graphics.drawRect(0, 180, 120, 4);
+    graphics.endFill();
+    
+    app.stage.addChild(graphics);
+    
 
     PIXI.utils.sayHello(type);
   </script>
