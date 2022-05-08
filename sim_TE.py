@@ -1,5 +1,6 @@
 ## Nothing so far
 #ToDo: add the export to desirable format
+import os.path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,7 +30,7 @@ def generate_house_data(steps):
         if house in ["R5", "R7", "R9", "R11", "R14"]:
             house_data[house]['battery_SoC'] =  np.zeros(steps)
 
-    return house_data, steps
+    return house_data
 
 def plot_TE(house_data, steps, SD_ratio, market_settlement_price):
     system_bill = np.zeros(steps)
@@ -55,28 +56,29 @@ def plot_TE(house_data, steps, SD_ratio, market_settlement_price):
     system_SoC = system_SoC/num_batteries
 
 
-    fig, ax = plt.subplots(7, 1, sharex=True)
-    ax[0].plot(system_generation, color='red', label='Solar Power Supply')
-    ax[0].plot(system_load_demand, color='blue', label='Load Demand')
-    ax[0].set_ylabel('[kW]')
-    ax[1].plot(net_billing_net_load, label="Net Billing Net-Load")
-    ax[1].plot(te_net_load, label="TE Ned-Load")
-    ax[1].set_ylabel('[kW]')
-    ax[2].plot(system_SoC, label="System Collective SoC")
-    ax[2].set_ylabel('%C')
-    ax[3].plot(SD_ratio, label="Supply/Demand Ratio")
-    ax[3].set_ylabel('[kW/kW]')
-    ax[4].plot(market_settlement_price, label="Avg Settlement Price")
-    ax[4].set_ylabel('[$/Wh]')
-    ax[5].plot(system_bill, label='System Bill')
-    ax[5].set_ylabel('[$]')
-    ax[6].plot(system_savings, label='System Savings')
-    ax[6].set_ylabel('[$]')
+    fig, ax = plt.subplots(3, 1, sharex=True)
+    ax[0].plot(system_generation, color='red', label='-Solar')
+    ax[0].plot(system_load_demand, color='blue', label='Load')
+    ax[0].set_ylabel('Power[kW]')
+    ax[1].plot(net_billing_net_load, label="Net-Billing")
+    ax[1].plot(te_net_load, label="TE")
+    ax[1].set_ylabel('Net-Load[kW]')
+    ax[2].plot(system_SoC)
+    ax[2].set_ylabel('System SoC')
+    #ax[3].plot(SD_ratio, label="Supply/Demand Ratio")
+    #ax[3].set_ylabel('[kW/kW]')
+    #ax[4].plot(market_settlement_price, label="Avg Settlement Price")
+    #ax[4].set_ylabel('[$/Wh]')
+    #ax[5].plot(system_bill, label='System Bill')
+    #ax[5].set_ylabel('[$]')
+    #ax[6].plot(system_savings, label='System Savings')
+    #ax[6].set_ylabel('[$]')
     ax[-1].set_xlabel('t in [h]')
 
     for index in range(len(ax)):
         ax[index].legend(loc="upper right")
     plt.legend()
+    plt.savefig('TE Systems performance overview.pdf')
     plt.show()
 
 # generating simulation data
@@ -157,3 +159,13 @@ def simulate_TE():
     plot_TE(house_data, steps, SD_ratio, market_settlement_price)
     return house_data
 
+def export_data_to_PFcsv():
+    house_data = simulate_TE()
+    house_ids = list(house_data.keys())
+    for house_nbr in range(len(house_ids)):
+        house_id = house_ids[house_nbr]
+        net_load = house_data[house_id]['te-load']
+        filename = str(house_nbr) + ".csv"
+        folder = 'pf_data'
+        path = os.path.join(folder, filename)
+        np.savetxt(path, net_load, delimiter=",")
