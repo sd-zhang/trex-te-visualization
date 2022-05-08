@@ -55,6 +55,7 @@
       // load node map json into variable
       node_size = 32;
       edge_scale = node_size * 3
+      offset = node_size / 2
 
       $.getJSON("data/node_map.json", function(node_map){
         // console.log(node_map);
@@ -76,7 +77,7 @@
             nodes[node] = new Sprite(resources.generic_node.texture);
             break;
         }
-        // console.log(*node_map[node]["pos"])
+        // console.log(nodes)
         nodes[node].width = node_size;
         nodes[node].height = node_size;
         var x_pos = edge_scale * node_map[node]["pos"][0]
@@ -84,10 +85,115 @@
 
         nodes[node].position.set(x_pos, y_pos)
         app.stage.addChild(nodes[node]);
+
+        
+
       }
+      // make loop for calculating the difference between each node
+      // var line_graphics = {}
+     let diagonal_connections = {0: ["R1", "R6"], 1: ["R2", "R9"] }
+      
+      for (let node in node_map){
+        for (let connection in node_map[node]["connections"]){
+          // draw all the connections for each node and see what happens
+          // calculate the difference between node and connection; 
+          // console.log("node:", node)
+          var conn = node_map[node]["connections"][connection];
+          // console.log("connection", conn)
+          // print the diagonal sections 
+          if (node == "R1") {
+            if (conn == "R6"){
+              console.log("diagonal element")
+            }
+          }
+
+          if (node == "R6") {
+            if (conn == "R1") { 
+              console.log("opposite diagonal element")
+            }
+          }
+
+          if (node == "R2") {
+            if (conn == "R9"){
+              console.log("diagonal element")
+            }
+          }
+
+          if (node == "R2") {
+            if (conn == "R9") { 
+              console.log("opposite diagonal element")
+            }
+          }
+          
+          switch(node){
+            case "R1":
+              if (conn == "R6")
+              {console.log("R1, R6, do stuff")};
+              let line = new PIXI.Graphics(); 
+              line.lineStyle(3, 0x3500FA, 0.3);
+            // todo: I cant use lines, must reference the node_map directly 
+              line.position.set((node_map[node]["pos"][0]*edge_scale) + offset, node_map[node]["pos"][1]*edge_scale + offset);
+              diff_x = node_map[node]["pos"][0] - node_map[conn]["pos"][0]
+              diff_y = node_map[node]["pos"][1] - node_map[conn]["pos"][1]
+              console.log("x", node, conn,Math.abs(diff_x))
+              console.log("y", node, conn, diff_y)
+            // this is the difference between node and connection 
+              line.lineTo(Math.abs(diff_x) * edge_scale, -diff_y * edge_scale)
+              app.stage.addChild(line);
+              break
+            case "R6":
+              if (conn == "R1"){
+                console.log("R6, R1, do nothing");
+              }
+              break 
+            case "R2": 
+              if (conn = "R9"){
+                console.log("R2, R9");
+                let line = new PIXI.Graphics(); 
+                line.lineStyle(3, 0x3500FA, 0.1);
+              // todo: I cant use lines, must reference the node_map directly 
+                line.position.set((node_map[node]["pos"][0]*edge_scale) + offset, node_map[node]["pos"][1]*edge_scale + offset);
+                diff_x = node_map[node]["pos"][0] - node_map[conn]["pos"][0]
+                diff_y = node_map[node]["pos"][1] - node_map[conn]["pos"][1]
+                console.log("x", node, conn,Math.abs(diff_x))
+                console.log("y", node, conn, diff_y)
+              // this is the difference between node and connection 
+                line.lineTo(Math.abs(diff_x) * edge_scale, -diff_y * edge_scale)
+                app.stage.addChild(line);
+              }
+              break 
+            case "R9": 
+              if (conn = "R2"){
+                console.log("R9, R2, do nothing")
+              }
+              break 
+            default: 
+            // this is the normal behaviour 
+            let line2 = new PIXI.Graphics()
+            line2.lineStyle(3, 0x3500FA, 0.3);
+          // todo: I cant use lines, must reference the node_map directly 
+            line2.position.set((node_map[node]["pos"][0]*edge_scale) + offset, node_map[node]["pos"][1]*edge_scale + offset);
+            diff_x = node_map[node]["pos"][0] - node_map[conn]["pos"][0]
+            diff_y = node_map[node]["pos"][1] - node_map[conn]["pos"][1]
+            console.log("x", node, conn,Math.abs(diff_x))
+            console.log("y", node, conn, diff_y)
+          // this is the difference between node and connection 
+            line2.lineTo(Math.abs(diff_x) * edge_scale, Math.abs(diff_y) * edge_scale)
+            app.stage.addChild(line2);
+          }
+          }
+      }
+
         }).fail(function(){
             console.log("An error has occurred.");
         });
+
+        // var lines = {};
+        // for (let node in node_map) {
+        //   // lines.push({x: edge_scale * node_map[node]["pos"][0] , y: edge_scale * node_map[node]["pos"][1] } )
+        //   console.log("yes");
+        // }
+
 
         var conveyor1 = new Sprite(resources.conveyor.texture);
         conveyor1.width = node_size;
@@ -97,13 +203,13 @@
 
         // 'line to display'
         let graphics = new PIXI.Graphics()
-        graphics.lineStyle(3, 0x3500FA, 0.3);
-        graphics.position.set((edge_scale * 2) + (node_size / 2 ), edge_scale * 0 + node_size);
-        graphics.lineTo(0, edge_scale * 2)
+        graphics.lineStyle(3, 0xDE021F, 0.8);
+        graphics.position.set((edge_scale * 2) + (node_size / 2 ), edge_scale * 2 + node_size);
+        graphics.lineTo(edge_scale* 2, edge_scale * -1)
         app.stage.addChild(graphics);
 
         // animation Path 
-        var path = [{x:(edge_scale * 2)  , y : edge_scale * 2 }];  
+        var path = [{x:(edge_scale * 2)  , y : edge_scale * 2 }, {x:0, y : edge_scale * 2}];  
         gsap.registerPlugin(MotionPathPlugin);
         
         // animation code  
@@ -138,7 +244,7 @@
       }
     });
     
-    app.stage.addChild(graphics);
+    // app.stage.addChild(graphics);
     
 
     // PIXI.utils.sayHello(type);
