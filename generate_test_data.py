@@ -9,8 +9,8 @@ from corst_curves import calculate_pricepoint, market, calculate_grid_costs
 # generating the house data
 house_id = ["R5", "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14"]
 house_data = {}
-steps = 24*3
-capacity_bess = 6
+steps = int(24*3.3) #.5 because thats when the batteries are empty
+capacity_bess = 7
 for house in house_id:
     if house in ["R6", "R8", "R10", "R12"]:
         scale_solar = 0
