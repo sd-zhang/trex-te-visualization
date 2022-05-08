@@ -9,6 +9,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.min.js" integrity="sha512-Y8iWYJDo6HiTo5xtml1g4QqHtl/PO1w+dmUpQfQSOTqKNsMhExfyPN2ncNAe9JuJUSKzwK/b6oaNPop4MXzkwg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/MotionPathPlugin.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/PixiPlugin.min.js"></script>
   <script type="text/javascript">
     let type = "WebGL";
     if (!PIXI.utils.isWebGLSupported()) {
@@ -45,6 +48,7 @@
     .add("feeder_node", "images/feeder_node.png")
     .add("home_node", "images/home_node.png")
     // .add("dabrex_sprite", "images/dabrex.png")
+    .add("conveyor", "/images/conveyer_snipp.png" )
     .load(setup);
 
     function setup() {
@@ -75,15 +79,52 @@
         // console.log(*node_map[node]["pos"])
         nodes[node].width = node_size;
         nodes[node].height = node_size;
+        var x_pos = edge_scale * node_map[node]["pos"][0]
+        var y_pos = edge_scale * node_map[node]["pos"][1]
 
-        nodes[node].position.set(edge_scale * node_map[node]["pos"][0], edge_scale * node_map[node]["pos"][1])
+        nodes[node].position.set(x_pos, y_pos)
         app.stage.addChild(nodes[node]);
       }
-      }).fail(function(){
-          console.log("An error has occurred.");
+        }).fail(function(){
+            console.log("An error has occurred.");
+        });
+
+        var conveyor1 = new Sprite(resources.conveyor.texture);
+        conveyor1.width = node_size;
+        conveyor1.height = node_size;
+        conveyor1.position.set(edge_scale*2, edge_scale*0  +node_size );
+        app.stage.addChild(conveyor1);
+
+        // 'line to display'
+        let graphics = new PIXI.Graphics()
+        graphics.lineStyle(3, 0x3500FA, 0.3);
+        graphics.position.set((edge_scale * 2) + (node_size / 2 ), edge_scale * 0 + node_size);
+        graphics.lineTo(0, edge_scale * 2)
+        app.stage.addChild(graphics);
+
+        // animation Path 
+        var path = [{x:(edge_scale * 2)  , y : edge_scale * 2 }];  
+        gsap.registerPlugin(MotionPathPlugin);
+        
+        // animation code  
+        gsap.to(conveyor1, {
+        duration: 0.5, 
+        repeat: 500,
+        repeatDelay: 0.3,
+        yoyo: false,
+        ease: "none",
+        motionPath:{
+          path: path,
+          // align: path,
+          autoRotate: false,
+          alignOrigin: [0.5, 0.5]
+        }
       });
+
+        
     }
 
+    // load powerflow csv into variable
     $.ajax({
       url: "data/powerflow_series.csv",
       async: false,
@@ -96,23 +137,8 @@
           // call a function on complete 
       }
     });
-
-    // var powerflow_i = $.csv.toArrays("data/powerflow_series.csv");
-    // console.log(powerflow_i);
-
-    // const line = new Graphics();
-    // line.lineStyle({width: 4, color: 0xFFFFFF, alpha: 1});
-    // line.moveTo(0, 0);
-    // line.lineTo(200, 2000);
-    // line.x = 200;
-    // line.y = 200;
-
-    // const graphics = new Graphics();
-    // graphics.beginFill(0xDE3249);
-    // graphics.drawRect(0, 180, 120, 4);
-    // graphics.endFill();
     
-    // app.stage.addChild(graphics);
+    app.stage.addChild(graphics);
     
 
     // PIXI.utils.sayHello(type);
