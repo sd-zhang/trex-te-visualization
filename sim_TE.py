@@ -63,16 +63,15 @@ def plot_TE(house_data, steps, SD_ratio, market_settlement_price):
     ax[1].plot(net_billing_net_load, label="Net-Billing")
     ax[1].plot(te_net_load, label="TE")
     ax[1].set_ylabel('Net-Load[kW]')
-    ax[2].plot(system_SoC)
-    ax[2].set_ylabel('System SoC')
+    ax[2].plot(system_savings)
+    ax[2].set_ylabel('Savings[$]')
     #ax[3].plot(SD_ratio, label="Supply/Demand Ratio")
     #ax[3].set_ylabel('[kW/kW]')
     #ax[4].plot(market_settlement_price, label="Avg Settlement Price")
     #ax[4].set_ylabel('[$/Wh]')
     #ax[5].plot(system_bill, label='System Bill')
     #ax[5].set_ylabel('[$]')
-    #ax[6].plot(system_savings, label='System Savings')
-    #ax[6].set_ylabel('[$]')
+
     ax[-1].set_xlabel('t in [h]')
 
     for index in range(len(ax)):
