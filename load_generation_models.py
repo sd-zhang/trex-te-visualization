@@ -35,7 +35,9 @@ def bess(p_target=10, soc_now=0.1, capacity=100):
 
     soc_now = soc_now + p_possible/capacity
 
-    return soc_now, p_residual, p_possible
+    return soc_now,\
+           [p_residual, p_possible],\
+           [p_ch_max, p_dis_max]
 
 def plot():
     solar, load = get_house_data()
