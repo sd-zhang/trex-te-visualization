@@ -167,6 +167,40 @@
                 console.log("R9, R2, do nothing")
               }
               break 
+            // LONG lines being dumb 
+            case "R2":
+              if (conn = "R10"){
+                console.log("R2, R10 DO no STUFF")
+              //   let line = new PIXI.Graphics(); 
+              //   line.lineStyle(3, 0x3500FA, 0.1);
+              // // todo: I cant use lines, must reference the node_map directly 
+              //   line.position.set((node_map[node]["pos"][0]*edge_scale) + offset, node_map[node]["pos"][1]*edge_scale + offset);
+              //   diff_x = node_map[node]["pos"][0] - node_map[conn]["pos"][0]
+              //   diff_y = node_map[node]["pos"][1] - node_map[conn]["pos"][1]
+              //   console.log("x IMPORTANT ", node, conn,diff_x)
+              //   console.log("y IMPORTANT", node, conn, diff_y)
+              // // this is the difference between node and connection 
+              //   line.lineTo(Math.abs(diff_x) * edge_scale, -diff_y * edge_scale)
+              //   app.stage.addChild(line);
+              } 
+              break 
+            
+            case "R10":
+              if (conn = "R2"){
+              console.log("Stuff R10, R2")
+              let line = new PIXI.Graphics(); 
+                line.lineStyle(3, 0x3500FA, 0.3);
+              // todo: I cant use lines, must reference the node_map directly 
+                line.position.set((node_map[node]["pos"][0]*edge_scale) + offset, node_map[node]["pos"][1]*edge_scale + offset);
+                diff_x = node_map[node]["pos"][0] - node_map[conn]["pos"][0]
+                diff_y = node_map[node]["pos"][1] - node_map[conn]["pos"][1]
+                console.log("x IMPORTANT ", node, conn,diff_x)
+                console.log("y IMPORTANT", node, conn, diff_y)
+              // this is the difference between node and connection 
+                line.lineTo(-diff_x * edge_scale, diff_y * edge_scale)
+                app.stage.addChild(line);
+            } 
+              break   
             default: 
             // this is the normal behaviour 
             let line2 = new PIXI.Graphics()
@@ -202,11 +236,11 @@
         app.stage.addChild(conveyor1);
 
         // 'line to display'
-        let graphics = new PIXI.Graphics()
-        graphics.lineStyle(3, 0xDE021F, 0.8);
-        graphics.position.set((edge_scale * 2) + (node_size / 2 ), edge_scale * 2 + node_size);
-        graphics.lineTo(edge_scale* 2, edge_scale * -1)
-        app.stage.addChild(graphics);
+        // let graphics = new PIXI.Graphics()
+        // graphics.lineStyle(3, 0xDE021F, 0.8);
+        // graphics.position.set((edge_scale * 2) + (node_size / 2 ), edge_scale * 2 + node_size);
+        // graphics.lineTo(edge_scale* 2, edge_scale * -1)
+        // app.stage.addChild(graphics);
 
         // animation Path 
         var path = [{x:(edge_scale * 2)  , y : edge_scale * 2 }, {x:0, y : edge_scale * 2}];  
