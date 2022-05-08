@@ -46,17 +46,28 @@
 
     function setup() {
       // load node map json into variable
-      $.getJSON("data/node_map.json", function(node_map){
-            console.log(node_map.name); // Prints: Harry
-            console.log(node_map.age); // Prints: 14
+      node_size = 32;
+      edge_scale = node_size * 4
 
-            // draw node sprites based on node_map
-            var nodes = {};
-            for (var i = 0; i < 13; ++i) {
-              nodes["r"+i] = new PIXI.Sprite(PIXI.Loader.shared.resources.home_sprite.texture);
-              nodes["r"+i].position.set(200 + 120*i, 0)
-              app.stage.addChild(nodes["r"+i]);
-            }
+      $.getJSON("data/node_map.json", function(node_map){
+        console.log(node_map);
+            // console.log(node_map.name); // Prints: Harry
+            // console.log(node_map.age); // Prints: 14
+
+        // draw node sprites based on node_map
+        var nodes = {};
+        for (let node in node_map) {
+          // console.log(node)
+        // }
+        // for (var i = 0; i < 13; ++i) {
+          nodes[node] = new Sprite(resources.home_sprite.texture);
+          // console.log(*node_map[node]["pos"])
+          nodes[node].width = node_size;
+          nodes[node].height = node_size;
+
+          nodes[node].position.set(edge_scale * node_map[node]["pos"][0], edge_scale * node_map[node]["pos"][1])
+          app.stage.addChild(nodes[node]);
+        }
         }).fail(function(){
             console.log("An error has occurred.");
         });
