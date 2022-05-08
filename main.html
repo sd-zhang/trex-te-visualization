@@ -283,15 +283,36 @@
         "r4r13": horisontal_left_short,
         "r4r14" : horisontal_right_short 
     };
+
+    let pathstart = {
+      "r1r2" : [2* edge_scale, 2 *edge_scale],
+      "r1r5" : [2* edge_scale, 2 *edge_scale], 
+      "r1r6" : [2* edge_scale, 2 *edge_scale], 
+      "r1r7" :  [2* edge_scale, 2 *edge_scale],
+      "r2r3" : [2 * edge_scale, 4 * edge_scale], 
+      "r2r8" : horisontal_left_short,
+      "r2r9" : diagonal, 
+      "r2r10" : horisontal_right_long,
+      "r3r11" : horisontal_left_short,
+      "r3r4" : vertical,
+      "r3r12" : horisontal_right_short,
+      "r4r13": horisontal_left_short,
+      "r4r14" : horisontal_right_short 
+    }
     console.log(paths)
     for (let hour in powerflow_i){
       // 
       // set up sprites based on the sign of the values
     var pf_values = powerflow_i[hour]
-    // delete pf_values[0
+    delete pf_values["hour"]
      console.log(pf_values)
      
-    //  for(l)
+     for(let i in pf_values)
+     { // create the sprite 
+
+      // run the animation 
+
+      }
 
     }
     }
