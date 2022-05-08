@@ -261,7 +261,39 @@
         }
       });
 
-        
+
+      vertical = [{x: edge_scale * 0, y: edge_scale * 2}];
+      horisontal_left_short = [{x: -(edge_scale* 2), y : 0 }];
+      horisontal_right_short = [{x:edge_scale * 2, y: 0 }];
+      diagonal = [{x: edge_scale *2, y: edge_scale*1}];
+      horisontal_right_long = [{x: edge_scale* 4 , y:0 }];
+
+      let paths = {
+        "r1r2" : vertical,
+        "r1r5" : horisontal_left_short, 
+        "r1r6" : diagonal, 
+        "r1r7" : horisontal_right_long,
+        "r2r3" : vertical, 
+        "r2r8" : horisontal_left_short,
+        "r2r9" : diagonal, 
+        "r2r10" : horisontal_right_long,
+        "r3r11" : horisontal_left_short,
+        "r3r4" : vertical,
+        "r3r12" : horisontal_right_short,
+        "r4r13": horisontal_left_short,
+        "r4r14" : horisontal_right_short 
+    };
+    console.log(paths)
+    for (let hour in powerflow_i){
+      // 
+      // set up sprites based on the sign of the values
+    var pf_values = powerflow_i[hour]
+    // delete pf_values[0
+     console.log(pf_values)
+     
+    //  for(l)
+
+    }
     }
 
     // load powerflow csv into variable
@@ -276,12 +308,19 @@
         console.log(powerflow_i)
           // call a function on complete 
       }
+
+      
     });
-    
-    // app.stage.addChild(graphics);
+    // need to prepare the paths: 
+    node_size = 32;
+    edge_scale = node_size * 3
     
 
-    // PIXI.utils.sayHello(type);
+    
+// here we can do the path visualization in a for loop 
+    // in the for loop, you need to do 2 things : 
+    // 1. set up the sprite in the right place
+    // 2. link the path to the animation 
   </script>
 </body>
 </html>
