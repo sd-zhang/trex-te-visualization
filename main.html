@@ -79,10 +79,12 @@
         // console.log(*node_map[node]["pos"])
         nodes[node].width = node_size;
         nodes[node].height = node_size;
+        var x_pos = edge_scale * node_map[node]["pos"][0]
+        var y_pos = edge_scale * node_map[node]["pos"][1]
 
-          nodes[node].position.set(edge_scale * node_map[node]["pos"][0], edge_scale * node_map[node]["pos"][1])
-          app.stage.addChild(nodes[node]);
-        }
+        nodes[node].position.set(x_pos, y_pos)
+        app.stage.addChild(nodes[node]);
+      }
         }).fail(function(){
             console.log("An error has occurred.");
         });
@@ -122,6 +124,7 @@
         
     }
 
+    // load powerflow csv into variable
     $.ajax({
       url: "data/powerflow_series.csv",
       async: false,
