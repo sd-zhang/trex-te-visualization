@@ -15,7 +15,8 @@ def get_house_data(scale_load=1, scale_gen=1, steps=24):
     solar = np.maximum(0.0, solar)
 
     base_load = 0.1
-    half_day = int(hours[-1]/2)
+    half_day = 12
+    hours = np.arange(0, steps)
     load = np.sin((hours+1)*normalize_freq_to_24h)
     load[0:12] = load[0:12]**6
     load[12:] = load[12:]**2
@@ -32,8 +33,10 @@ def bess(p_target=10, soc_now=0.1, capacity=100):
 
     p_possible = max(p_dis_max, min(p_ch_max, p_target))
     p_residual = p_target - p_possible
-
-    soc_now = soc_now + p_possible/capacity
+    delta = 0
+    if capacity > 0:
+        delta = p_possible/capacity
+    soc_now = soc_now + delta
 
     return soc_now,\
            [p_residual, p_possible],\
