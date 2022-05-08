@@ -40,14 +40,16 @@
     document.body.appendChild(app.view);
 
     loader
-    .add("home_sprite", "images/home.png")
+    .add("generic_node", "images/generic_node.png")
+    .add("feeder_node", "images/feeder_node.png")
+    .add("home_node", "images/home_node.png")
     // .add("dabrex_sprite", "images/dabrex.png")
     .load(setup);
 
     function setup() {
       // load node map json into variable
       node_size = 32;
-      edge_scale = node_size * 4
+      edge_scale = node_size * 3
 
       $.getJSON("data/node_map.json", function(node_map){
         console.log(node_map);
@@ -55,22 +57,30 @@
             // console.log(node_map.age); // Prints: 14
 
         // draw node sprites based on node_map
-        var nodes = {};
-        for (let node in node_map) {
-          // console.log(node)
-        // }
-        // for (var i = 0; i < 13; ++i) {
-          nodes[node] = new Sprite(resources.home_sprite.texture);
-          // console.log(*node_map[node]["pos"])
-          nodes[node].width = node_size;
-          nodes[node].height = node_size;
-
-          nodes[node].position.set(edge_scale * node_map[node]["pos"][0], edge_scale * node_map[node]["pos"][1])
-          app.stage.addChild(nodes[node]);
+      var nodes = {};
+      for (let node in node_map) {
+        // console.log(node)
+        switch(node_map[node]["type"]) {
+          case "feeder":
+            nodes[node] = new Sprite(resources.feeder_node.texture);
+            break;
+          case "home":
+            nodes[node] = new Sprite(resources.home_node.texture);
+            break;
+          default:
+            nodes[node] = new Sprite(resources.generic_node.texture);
+            break;
         }
-        }).fail(function(){
-            console.log("An error has occurred.");
-        });
+        // console.log(*node_map[node]["pos"])
+        nodes[node].width = node_size;
+        nodes[node].height = node_size;
+
+        nodes[node].position.set(edge_scale * node_map[node]["pos"][0], edge_scale * node_map[node]["pos"][1])
+        app.stage.addChild(nodes[node]);
+      }
+      }).fail(function(){
+          console.log("An error has occurred.");
+      });
     }
     const line = new Graphics();
     // line.lineStyle({width: 4, color: 0xFFFFFF, alpha: 1});
