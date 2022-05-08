@@ -8,6 +8,7 @@
 <body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.1.3/pixi.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.21/jquery.csv.min.js" integrity="sha512-Y8iWYJDo6HiTo5xtml1g4QqHtl/PO1w+dmUpQfQSOTqKNsMhExfyPN2ncNAe9JuJUSKzwK/b6oaNPop4MXzkwg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/MotionPathPlugin.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.4/PixiPlugin.min.js"></script>
@@ -43,7 +44,9 @@
     document.body.appendChild(app.view);
 
     loader
-    .add("home_sprite", "images/home.png")
+    .add("generic_node", "images/generic_node.png")
+    .add("feeder_node", "images/feeder_node.png")
+    .add("home_node", "images/home_node.png")
     // .add("dabrex_sprite", "images/dabrex.png")
     .add("conveyor", "/images/conveyer_snipp.png" )
     .load(setup);
@@ -54,20 +57,28 @@
       edge_scale = node_size * 3
 
       $.getJSON("data/node_map.json", function(node_map){
-        console.log(node_map);
+        // console.log(node_map);
             // console.log(node_map.name); // Prints: Harry
             // console.log(node_map.age); // Prints: 14
 
         // draw node sprites based on node_map
-        var nodes = {};
-        for (let node in node_map) {
-          // console.log(node)
-        // }
-        // for (var i = 0; i < 13; ++i) {
-          nodes[node] = new Sprite(resources.home_sprite.texture);
-          // console.log(*node_map[node]["pos"])
-          nodes[node].width = node_size;
-          nodes[node].height = node_size;
+      var nodes = {};
+      for (let node in node_map) {
+        // console.log(node)
+        switch(node_map[node]["type"]) {
+          case "feeder":
+            nodes[node] = new Sprite(resources.feeder_node.texture);
+            break;
+          case "home":
+            nodes[node] = new Sprite(resources.home_node.texture);
+            break;
+          default:
+            nodes[node] = new Sprite(resources.generic_node.texture);
+            break;
+        }
+        // console.log(*node_map[node]["pos"])
+        nodes[node].width = node_size;
+        nodes[node].height = node_size;
 
           nodes[node].position.set(edge_scale * node_map[node]["pos"][0], edge_scale * node_map[node]["pos"][1])
           app.stage.addChild(nodes[node]);
@@ -110,11 +121,24 @@
 
         
     }
+
+    $.ajax({
+      url: "data/powerflow_series.csv",
+      async: false,
+      success: function (csvd) {
+          powerflow_i = $.csv.toObjects(csvd);
+      },
+      dataType: "text",
+      complete: function () {
+        console.log(powerflow_i)
+          // call a function on complete 
+      }
+    });
     
-   
+    app.stage.addChild(graphics);
     
 
-    PIXI.utils.sayHello(type);
+    // PIXI.utils.sayHello(type);
   </script>
 </body>
 </html>
