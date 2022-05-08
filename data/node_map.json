@@ -1,5 +1,6 @@
 {
   "R0": {
+    "type": "feeder",
     "pos": [2,0],
     "connections": ["R1"]
   },
@@ -20,42 +21,52 @@
     "connections": ["R3", "R13", "R14"]
   },
   "R5": {
+    "type": "home",
     "pos": [0,2],
     "connections": ["R1"]
   },
   "R6": {
+    "type": "home",
     "pos": [4,1],
     "connections": ["R1"]
   },
   "R7": {
+    "type": "home",
     "pos": [6,2],
     "connections": ["R1"]
   },
   "R8": {
+    "type": "home",
     "pos": [0,4],
     "connections": ["R2"]
   },
   "R9": {
+    "type": "home",
     "pos": [4,3],
     "connections": ["R2"]
   },
   "R10": {
+    "type": "home",
     "pos": [6,4],
     "connections": ["R2"]
   },
   "R11": {
+    "type": "home",
     "pos": [0,6],
     "connections": ["R3"]
   },
   "R12": {
+    "type": "home",
     "pos": [4,6],
     "connections": ["R3"]
   },
   "R13": {
+    "type": "home",
     "pos": [0,8],
     "connections": ["R4"]
   },
   "R14": {
+    "type": "home",
     "pos": [4,8],
     "connections": ["R1"]
   }
