@@ -25,6 +25,19 @@ def get_house_data(scale_load=1, scale_gen=1):
 
     return solar*scale_gen, load*scale_gen
 
+# p_target positive means we're charging
+# p_target negative means we're discharging
+def bess(p_target=10, soc_now=0.1, capacity=100):
+    p_dis_max = -soc_now*capacity
+    p_ch_max = (1-soc_now)*capacity
+
+    p_possible = max(p_dis_max, min(p_ch_max, p_target))
+    p_residual = p_target - p_possible
+
+    soc_now = soc_now + p_possible/capacity
+
+    return soc_now, p_residual
+
 def plot():
     solar, load = get_house_data()
     plt.plot(load, color='blue', label='Load')
