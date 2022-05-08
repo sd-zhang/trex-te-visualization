@@ -13,7 +13,7 @@
   },
   "R3": {
     "pos": [2,6],
-    "connections": ["R4", "R11", "R12"]
+    "connections": ["R2", "R4", "R11", "R12"]
   },
   "R4": {
     "pos": [2,8],
@@ -28,7 +28,7 @@
     "connections": ["R1"]
   },
   "R7": {
-    "pos": [7,2],
+    "pos": [6,2],
     "connections": ["R1"]
   },
   "R8": {
@@ -40,7 +40,7 @@
     "connections": ["R2"]
   },
   "R10": {
-    "pos": [7,4],
+    "pos": [6,4],
     "connections": ["R2"]
   },
   "R11": {
