@@ -72,19 +72,36 @@
             console.log("An error has occurred.");
         });
     }
-    const line = new Graphics();
-    // line.lineStyle({width: 4, color: 0xFFFFFF, alpha: 1});
-    // line.moveTo(0, 0);
-    // line.lineTo(200, 2000);
-    // line.x = 200;
-    // line.y = 200;
-
-    const graphics = new Graphics();
-    graphics.beginFill(0xDE3249);
-    graphics.drawRect(0, 180, 120, 4);
-    graphics.endFill();
     
-    app.stage.addChild(graphics);
+    var line = new PIXI.Graphics(),
+    centerY = 0,
+    increment = 2;
+
+    app.stage.addChild(line);   
+
+    app.ticker.add(() => {
+  // clear the graphics object ('wipe the blackboard')
+    line.clear(); 
+
+   // redraw a new line
+    drawLine(centerY);
+
+  // calculate the next position
+      centerY = (centerY < window.innerHeight) ? centerY = centerY + increment : 0; 
+});
+
+function drawLine(centerY) {
+    line.lineStyle(1, 0xff0000);
+    line.moveTo(0,window.innerHeight/2);
+    line.lineTo(window.innerWidth/2, centerY);
+    line.lineTo(window.innerWidth, window.innerHeight/2);
+}
+    // const graphics = new Graphics();
+    // graphics.beginFill(0xDE3249);
+    // graphics.drawRect(0, 180, 120, 4);
+    // graphics.endFill();
+    
+    app.stage.addChild(line);
     
 
     PIXI.utils.sayHello(type);
