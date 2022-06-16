@@ -50,7 +50,7 @@
 <script>
 
 var w = 700;
-var h = 400;
+var h = 700;
 
 var margin = {
     top: 0,
@@ -89,7 +89,7 @@ var svg = d3.select("body")
 .append("g")
 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("flows.csv", function(d){
+d3.csv("flows2.csv", function(d){
 // d3.csv("Baseball_careers_1999.csv", function(d){
     d.from = +d.from;
     d.to = +d.to;
@@ -111,7 +111,7 @@ d3.csv("flows.csv", function(d){
   }))
   .enter()
   .append("path")
-  .style("stroke", "#000")
+  .style("stroke", "#d3d3d3")
   .attr("class", "arc")
   .attr("d", function(d){
     var from_scale = xScale(d.from),
@@ -151,7 +151,7 @@ d3.csv("flows.csv", function(d){
   function transition(path){
     path.each(function(PathItem, index){
       d3.select(this).transition()
-      // .delay(index + 200)
+      // .delay(1000)
       .duration(index * 5 + 1000)
       .on("start", function(){
         d3.select(this).style("opacity", 1)
