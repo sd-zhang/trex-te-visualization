@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello World</title>
+  <!-- <style>* {padding: 0; margin: 0}</style> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.4.4/d3.min.js" integrity="sha512-hnFpvCiJ8Fr1lYLqcw6wLgFUOEZ89kWCkO+cEekwcWPIPKyknKV1eZmSSG3UxXfsSuf+z/SgmiYB1zFOg3l2UQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<style type = "text/css">
+
+  body, html{
+      margin: 0;
+      padding: 0;
+      font-family: "Arial", sans-serif;
+      font-size: 11px;
+      text-align: center;
+    }
+  
+    /* #chart{
+      background-color: #1b1a1b;
+      border: 1px solid #CCC;
+    } */
+  
+    /* .yaxis path{
+      fill: none;
+      stroke: none;
+    }
+  
+    .yaxis line{
+      fill: none;
+      stroke: none;
+      stroke-width: 2px;
+      shape-rendering: crispEdges;
+      opacity: 0.7;
+      stroke-dasharray: 3,3;
+    } */
+  
+    /* .xaxis path,
+    .xaxis line{
+      fill: none;
+      stroke: none;
+    } */
+    
+    
+  
+</style>
+<body>
+<!-- Place all DOM elements here -->
+<div id="my_dataviz"></div>
+<!-- <svg width="100" height="100">
+  <path class="path2">
+</svg> -->
+<script>
+
+  var w = 700;
+  var h = 700;
+
+  const margin = {
+      top: 10,
+      bottom: h/2,
+      left: 40,
+      right: 40
+    }
+
+  var width = w - margin.left - margin.right;
+  var height = h - margin.top - margin.bottom;
+
+
+  // var xScale = d3.scaleLinear() 
+  //   .range([0, width])
+
+  // var yScale = d3.scaleLinear()
+  //   .range([height, 0])
+
+  // var radians = d3.scaleLinear()
+  //   .range([-Math.PI / 2, Math.PI / 2]);
+
+  // var arc = d3.radialLine()
+  //   .curve(d3.curveBasis)
+  //   .angle(function(d){ return radians(d); })
+
+  // var xAxis = d3.axisBottom()
+  //   .scale(xScale)
+
+  // var yAxis = d3.axisLeft()
+  //   .scale(yScale)
+
+  // append the svg object to the body of the page
+  var svg = d3.select("#my_dataviz")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      // .attr("width", 300)
+      // .attr("height", 150)
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  
+  const x = d3.scaleLinear()
+    .domain([0, 10])
+    .range([ 0, width ]);
+  // svg.append("g")
+  // .attr("transform", `translate(0, ${height})`)
+  // .call(d3.axisBottom(x));
+
+  // Add Y axis
+  const y = d3.scaleLinear()
+    .domain([0, 10])
+    .range([0, height]);
+    // svg.append("g")
+    // .call(d3.axisLeft(y));
+
+
+  //Read the data
+  d3.csv("node_map.csv").then( function(data) {
+      // Add nodes
+      svg.append('g')
+      .selectAll("dot")
+      .data(data)
+      .join("circle")
+          .attr("id", function(d) { return d.label})
+          .attr("cx", function (d) { return x(d.x); } )
+          .attr("cy", function (d) { return y(d.y); } )
+          .attr("r", 5)
+          .style("fill", "#69b3a2")
+          
+
+  })
+
+  // svg.append('path')
+
+  var bezierLine = d3.line()
+    .x(function(d) { return d[0]; })
+    .y(function(d) { return d[1]; })
+    .curve(d3.curveNatural);
+
+  svg.append('path')
+    .attr("d", bezierLine([[x(2), y(0)], [25, 70], [50, 100], [100, 50], [150, 20], [200, 130], [x(4), y(8)]]))
+    .attr("stroke", "red")
+    .attr("stroke-width", 1)
+    .attr("fill", "none");
+
+</script>
+<!-- Create a div where the graph will take place -->
+
+</body>
+</html>
