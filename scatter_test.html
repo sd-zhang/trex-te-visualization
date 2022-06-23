@@ -56,7 +56,7 @@
   var h = 700;
 
   const margin = {
-      top: 10,
+      top: 100,
       bottom: h/2,
       left: 40,
       right: 40
@@ -95,7 +95,7 @@
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
   
-  const x = d3.scaleLinear()
+  const xScale = d3.scaleLinear()
     .domain([0, 10])
     .range([ 0, width ]);
   // svg.append("g")
@@ -103,14 +103,14 @@
   // .call(d3.axisBottom(x));
 
   // Add Y axis
-  const y = d3.scaleLinear()
+  const yScale = d3.scaleLinear()
     .domain([0, 10])
     .range([0, height]);
     // svg.append("g")
     // .call(d3.axisLeft(y));
 
 
-  //Read the data
+  //Read the data to map nodes
   d3.csv("node_map.csv").then( function(data) {
       // Add nodes
       svg.append('g')
@@ -118,26 +118,75 @@
       .data(data)
       .join("circle")
           .attr("id", function(d) { return d.label})
-          .attr("cx", function (d) { return x(d.x); } )
-          .attr("cy", function (d) { return y(d.y); } )
+          .attr("cx", function (d) { return xScale(d.x); } )
+          .attr("cy", function (d) { return yScale(d.y); } )
           .attr("r", 5)
           .style("fill", "#69b3a2")
           
 
   })
 
+  //Read the data to draw and animate powerflow
+  // var bezierLine = d3.line()
+  //   .x(function(d) { return xScale(d[0]); })
+  //   .y(function(d) { return yScale(d[1]); })
+  //   .curve(d3.curveNatural);
+
   // svg.append('path')
+  //   .attr("d", bezierLine([[2, 0], [3, -1], [4, 8]]))
+  //   .attr("stroke", "red")
+  //   .attr("stroke-width", 1)
+  //   .attr("fill", "none");
 
   var bezierLine = d3.line()
-    .x(function(d) { return d[0]; })
-    .y(function(d) { return d[1]; })
-    .curve(d3.curveNatural);
+  .x(function(d) { return d[0]; })
+  .y(function(d) { return d[1]; })
+  .curve(d3.curveNatural);
 
-  svg.append('path')
-    .attr("d", bezierLine([[x(2), y(0)], [25, 70], [50, 100], [100, 50], [150, 20], [200, 130], [x(4), y(8)]]))
+  d3.csv("flows2.csv", function(d){
+// d3.csv("Baseball_careers_1999.csv", function(d){
+    d.from = "r"+d.from;
+    d.to = "r"+d.to;
+    d.fromX = d3.select("#"+d.from).attr("cx")
+    d.fromY = d3.select("#"+d.from).attr("cy")
+    d.toX = d3.select("#"+d.to).attr("cx")
+    d.toY = d3.select("#"+d.to).attr("cy")
+    d.path = bezierLine([[d.fromX, d.fromY], [d.toX, d.toY]])
+    return d;
+  }).then(function(data) {
+    var path = svg.selectAll("path")
+    .data(data.filter(function(d){
+      return d
+    }))
+    .enter()
+    .append('path')
     .attr("stroke", "red")
     .attr("stroke-width", 1)
-    .attr("fill", "none");
+    .attr("fill", "none")
+    .attr("d", function(d){
+      // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
+      return d.path})
+    .call(transition)
+
+    function transition(path){
+    path.each(function(PathItem, index){
+      d3.select(this).transition()
+      // .delay(1000)
+      .duration(index * 5 + 1000)
+      .on("start", function(){
+        d3.select(this).style("opacity", 1)
+      })
+      .attrTween("stroke-dasharray", tweenDash)
+    })
+
+  }
+
+  function tweenDash(){
+    var l = this.getTotalLength(),
+        i = d3.interpolateString("0," + l, l + "," + l)
+        return function(t){ return i(t); };
+  }
+})
 
 </script>
 <!-- Create a div where the graph will take place -->
