@@ -52,8 +52,8 @@
 </svg> -->
 <script>
 
-  var w = 700;
-  var h = 700;
+  var w = 1000;
+  var h = 1000;
 
   const margin = {
       top: 100,
@@ -96,7 +96,7 @@
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
   
   const xScale = d3.scaleLinear()
-    .domain([0, 10])
+    .domain([0, 8])
     .range([ 0, width ]);
   // svg.append("g")
   // .attr("transform", `translate(0, ${height})`)
@@ -104,7 +104,7 @@
 
   // Add Y axis
   const yScale = d3.scaleLinear()
-    .domain([0, 10])
+    .domain([0, 8])
     .range([0, height]);
     // svg.append("g")
     // .call(d3.axisLeft(y));
@@ -194,7 +194,10 @@
       //   }))
       .enter()
       .append("circle")
-      .attr("r", 3)
+      .attr("r", function(d){
+      // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
+      return 3 + d.size * 10})
+      // .attr("r", 3)
       .style("fill", "red")
       .attr("transform", "translate(" + 0 + ")")
       .style("opacity", 0)
