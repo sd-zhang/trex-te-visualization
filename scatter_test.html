@@ -79,7 +79,7 @@
   var height = h - margin.top - margin.bottom;
 
   var vis_start_time = 0
-  var vis_end_time = 24
+  var vis_end_time = 48
 
 
   // var xScale = d3.scaleLinear() 
@@ -100,6 +100,13 @@
 
   // var yAxis = d3.axisLeft()
   //   .scale(yScale)
+
+  // Define the div for the tooltip
+  // code example:
+  // https://bl.ocks.org/d3noob/180287b6623496dbb5ac4b048813af52
+  var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
 
   // append the svg object to the body of the page
   var svg = d3.select("#my_dataviz")
@@ -157,10 +164,7 @@
   .y(function(d) { return d[1]; })
   .curve(d3.curveNatural);
 
-  // Define the div for the tooltip
-  var div = d3.select("body").append("div")	
-    .attr("class", "tooltip")				
-    .style("opacity", 0);
+
 
   d3.csv("flows.csv", function(d){
 // d3.csv("Baseball_careers_1999.csv", function(d){
@@ -255,6 +259,7 @@
         const shrinkDuration = moveDelay+moveDuration+200
         d3.select(this)
         .transition()
+        .ease(d3.easeLinear)
         // .delay(index * 200)
         .delay(moveDelay + moveDuration)
         .duration(moveDuration)
