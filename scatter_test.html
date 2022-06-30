@@ -65,6 +65,9 @@
   var width = w - margin.left - margin.right;
   var height = h - margin.top - margin.bottom;
 
+  var vis_start_time = 0
+  var vis_end_time = 24
+
 
   // var xScale = d3.scaleLinear() 
   //   .range([0, width])
@@ -141,7 +144,7 @@
   .y(function(d) { return d[1]; })
   .curve(d3.curveNatural);
 
-  d3.csv("flows2.csv", function(d){
+  d3.csv("flows.csv", function(d){
 // d3.csv("Baseball_careers_1999.csv", function(d){
     d.from = "r"+d.from;
     d.to = "r"+d.to;
@@ -154,14 +157,19 @@
   }).then(function(data) {
     var path = svg.selectAll("path")
     .data(data.filter(function(d){
-      return d
+      return d.time >= vis_start_time && d.time <= vis_end_time
+      // return d
     }))
+     // .data(data.filter(function(d){
+      //     return d.From > 2010
+      //   }))
     .enter()
     .append('path')
-    .attr("stroke", "red")
+    .attr("stroke", "lightgrey")
     .attr("stroke-width", 1)
     .attr("fill", "none")
     .attr("d", function(d){
+      // console.log(d)
       // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
       return d.path})
     .call(transition)
@@ -187,7 +195,8 @@
 
   var circle = svg.selectAll("circle")
       .data(data.filter(function(d){
-        return d
+        return d.time >= vis_start_time && d.time <= vis_end_time
+        // return d
       }))
       // .data(data.filter(function(d){
       //     return d.From > 2010
@@ -196,7 +205,7 @@
       .append("circle")
       .attr("r", function(d){
       // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
-      return 3 + d.size * 10})
+      return 2 + d.size * 5})
       // .attr("r", 3)
       .style("fill", "red")
       .attr("transform", "translate(" + 0 + ")")
@@ -206,17 +215,28 @@
 
   function transition_circles(){
       circle.each(function(pathItem, index){
-      d3.select(this)
-      .transition()
-      .delay(index * 200)
-      .duration(index * 10 + 5000)
-      .on("start", function(){
-        d3.select(this).style("opacity", 1)
-      })
-      .on("end",function(){
-        d3.select(this).style("opacity", 0)
-      })
-      .attrTween("transform", translateAlong(path.nodes()[index], index))
+        const moveDelay = index * 200
+        const moveDuration = index * 10 + 5000
+        const shrinkDuration = moveDelay+moveDuration+200
+        d3.select(this)
+        .transition()
+        // .delay(index * 200)
+        .delay(moveDelay + moveDuration)
+        .duration(moveDuration)
+        // .attr("r", function(d){
+        // // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
+        // return Math.min(d.size, 5)})
+        .on("start", function(){
+          d3.select(this).style("opacity", 1)
+        })
+        .on("end",function(){
+          d3.select(this)
+          .style("opacity", 0)
+        })
+        .attrTween("transform", translateAlong(path.nodes()[index], index))
+        // .transition()
+        // .duration(shrinkDuration)
+        // .attr('r', 1)
       })
       
     }

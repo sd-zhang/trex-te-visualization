@@ -132,7 +132,7 @@ d3.csv("flows2.csv", function(d){
     //     dy = y,
     //     dr = Math.sqrt(dx * dx + dy * dy);
     // console.log(from_scale, to_scale, y)
-    console.log("M" + from_scale + " " + y + " A 43 50 0 0 1 " + to_scale + " " + y)
+    // console.log("M" + from_scale + " " + y + " A 43 50 0 0 1 " + to_scale + " " + y)
     return "M" + from_scale + " " + y + " A 43 50 0 0 1 " + to_scale + " " + y;
   })
   .style("fill", "none")
@@ -177,7 +177,7 @@ d3.csv("flows2.csv", function(d){
       //   }))
       .enter()
       .append("circle")
-      .attr("r", 5)
+      .attr("r", 3)
       .style("fill", "red")
       .attr("transform", "translate(" + 0 + ")")
       .style("opacity", 0)
@@ -189,7 +189,7 @@ d3.csv("flows2.csv", function(d){
       d3.select(this)
       .transition()
       .delay(index * 200)
-      .duration(index * 10 + 1000)
+      .duration(index * 10 + 5000)
       .on("start", function(){
         d3.select(this).style("opacity", 1)
       })
