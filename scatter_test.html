@@ -98,6 +98,30 @@
   var vis_start_time = 0
   var vis_end_time = 48
 
+  const transition_time = {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10
+    }
+  
+  // setting up live data store for bar and line graphs
+  var selected_node;
+  // bar graph
+  const bar_data = {
+    default: [
+    {group: "from", value: 0},
+    {group: "to", value: 0},
+    // {group: "C", value: 8}
+    ]
+
+    // r1: [
+    // {group: "A", value: 14},
+    // {group: "B", value: 16},
+    // {group: "C", value: 18}
+    // ]
+  };
+
 
   // var xScale = d3.scaleLinear() 
   //   .range([0, width])
@@ -180,14 +204,22 @@
         .attr("r", 5);	
       })
       .on("click", function(d) {
-        var node_id =  d3.select(this).attr('id').substring(1);
-        console.log(node_id, node_id % 2)
-        if (node_id % 2 == 0) {
-          update_bars(data2, 1000)
-        } 
-        else{
-          update_bars(data1, 1000)
+        // var node_id =  d3.select(this).attr('id').substring(1);
+        // selected_node =  d3.select(this).attr('id');
+        // console.log(selected_node)
+        if (!(d3.select(this).attr('id') in bar_data)) {
+          init_bar_data(d3.select(this).attr('id'))
         }
+        selected_node =  d3.select(this).attr('id')
+        update_bars(bar_data[selected_node], 1000)
+        
+
+        // if (node_id % 2 == 0) {
+        //   update_bars(bar_data.data2, 1000)
+        // } 
+        // else{
+        //   update_bars(bar_data.data1, 1000)
+        // }
         
         // update_bars(data2)
         // d3.select(this).attr('id');
@@ -270,6 +302,11 @@
       return 2 + d.size * 5})
       // .attr("r", 3)
       .style("fill", "red")
+      .attr("transform", "translate(" + 0 + ")")
+      // .attr("d", function(d){
+      //   return [d.from, d.to, d.size]
+      // })
+      .style("opacity", 0)
       .on("mouseover", function(event, d) {	
         // const[mouse_x, mouse_y] = d3.pointer(event)	
         // console.log(mouse_x, mouse_y)
@@ -287,8 +324,8 @@
           .duration(500)		
           .style("opacity", 0);	
       })
-      .attr("transform", "translate(" + 0 + ")")
-      .style("opacity", 0)
+      
+      // bar_data
 
   transition_circles();
 
@@ -306,12 +343,38 @@
         // .attr("r", function(d){
         // // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
         // return Math.min(d.size, 5)})
-        .on("start", function(){
+        .on("start", function(d){
           d3.select(this).style("opacity", 1)
+          if (!(d.from in bar_data)){
+            init_bar_data(d.from)
+          }
+          bar_data[d.from][0].value += Number(d.size)
+          // console.log(d.from, d.from in bar_data)
+          // if (!(d.from in bar_data)){
+          //   init_bar_data(d.from)
+          // }
+          // bar_data[d.from][0].value += Number(d.size)
+          // console.log(typeof(d.size))
+          // console.log(bar_data[d.from][0].value)
+    //       bar_data[node_id] = [
+    // {group: "from", value: 0},
+    // {group: "to", value: 0},
+    // {group: "C", value: 8}
+    // ]
+          // var transition_data = d3.select(this).attr('d')
+
         })
-        .on("end",function(){
-          d3.select(this)
-          .style("opacity", 0)
+        .on("end",function(d){
+          d3.select(this).style("opacity", 0)
+          if (!(d.to in bar_data)){
+            init_bar_data(d.to)
+          }
+          bar_data[d.to][1].value += Number(d.size)
+          
+          if (selected_node in bar_data){
+            update_bars(bar_data[selected_node], 100)
+          }
+          // console.log(d.from)
         })
         .attrTween("transform", translateAlong(path.nodes()[index], index))
         // .transition()
@@ -327,24 +390,16 @@
       return function(t){
         var p = path.getPointAtLength(t * l);
         return "translate(" + p.x + "," + p.y + ")";
-
       }
     }
   }
-
 })
-// bar graph
-const data1 = [
-   {group: "A", value: 4},
-   {group: "B", value: 16},
-   {group: "C", value: 8}
-];
 
-const data2 = [
-   {group: "A", value: 14},
-   {group: "B", value: 6},
-   {group: "C", value: 18}
-];
+// const data2 = [
+//    {group: "A", value: 14},
+//    {group: "B", value: 6},
+//    {group: "C", value: 18}
+// ];
 
 // Add the svg canvas for bar graph
 var	bar_graph = d3.select("#bar_container")
@@ -357,7 +412,7 @@ var	bar_graph = d3.select("#bar_container")
 // X axis
 var x = d3.scaleBand()
   .range([ 0, 1000 ])
-  .domain(data1.map(function(d) { return d.group; }))
+  .domain(bar_data.default.map(function(d) { return d.group; }))
   .padding(0.2);
   bar_graph.append("g")
   .attr("transform", "translate(0," + height + ")")
@@ -376,6 +431,7 @@ var y = d3.scaleLinear()
 // Bars
 // A function that create / update the plot for a given variable:
 function update_bars(data, duration) {
+  // console.log(bar_data)
   // console.log(data)
   var u = bar_graph.selectAll("rect")
     .data(data)
@@ -389,7 +445,15 @@ function update_bars(data, duration) {
     .attr("fill", "#69b3a2")
 }
 
-update_bars(data1, 0)
+function init_bar_data(node_id) {
+  bar_data[node_id] = [
+    {group: "from", value: 0},
+    {group: "to", value: 0},
+    // {group: "C", value: 8}
+    ]
+}
+
+update_bars(bar_data.default, 0)
 </script>
 <!-- Create a div where the graph will take place -->
 
