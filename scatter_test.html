@@ -231,7 +231,7 @@
         // transform_line_data(line_data[selected_node].from)
         result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
         // result = Object.entries(line_data[selected_node].from)
-        update_lines(result, 100)
+        update_lines(result, 1000)
         // console.log(result)
         // console.log(line_data[selected_node].from)
 
@@ -412,7 +412,7 @@
 
         })
         .on("end",function(d){
-          d3.select(this).style("opacity", 0)
+          // d3.select(this).style("opacity", 0)
           if (!(d.to in bar_data)){
             init_bar_data(d.to)
           }
@@ -434,9 +434,10 @@
 
           if (selected_node in line_data){
             result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
-            update_lines(result, 1000)
+            update_lines(result, 100)
             // update_lines(bar_data[selected_node], 100)
           }
+          d3.select(this).remove()
           // console.log(d.from)
         })
         .attrTween("transform", translateAlong(path.nodes()[index], index))
