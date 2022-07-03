@@ -1,0 +1,195 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hello World</title>
+  <!-- <style>* {padding: 0; margin: 0}</style> -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.4.4/d3.min.js" integrity="sha512-hnFpvCiJ8Fr1lYLqcw6wLgFUOEZ89kWCkO+cEekwcWPIPKyknKV1eZmSSG3UxXfsSuf+z/SgmiYB1zFOg3l2UQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://unpkg.com/d3-interpolate-path/build/d3-interpolate-path.min.js"></script>
+</head>
+<style type = "text/css">
+
+  /* body, html{
+      margin: 0;
+      padding: 0;
+      font-family: "Arial", sans-serif;
+      font-size: 11px;
+      text-align: center;
+    } */
+  
+  div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+  }
+  
+    /* #chart{
+      background-color: #1b1a1b;
+      border: 1px solid #CCC;
+    } */
+  
+    /* .yaxis path{
+      fill: none;
+      stroke: none;
+    }
+  
+    .yaxis line{
+      fill: none;
+      stroke: none;
+      stroke-width: 2px;
+      shape-rendering: crispEdges;
+      opacity: 0.7;
+      stroke-dasharray: 3,3;
+    } */
+  
+    /* .xaxis path,
+    .xaxis line{
+      fill: none;
+      stroke: none;
+    } */
+    
+    
+  
+</style>
+<body>
+<!-- Place all DOM elements here -->
+<div id="pf_container"></div>
+<!-- <div id="pf_container"></div>
+<div id="bar_container"></div>
+<div id="line_container"></div> -->
+<!-- <svg width="100" height="100">
+  <path class="path2">
+</svg> -->
+<script>
+
+  var w = 200;
+  var h = 400;
+
+  const margin = {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10
+    }
+
+  var width = w - margin.left - margin.right;
+  var height = h - margin.top - margin.bottom;
+
+  var vis_start_time = 0
+  var vis_end_time = 48
+
+  const transition_time = {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10
+    }
+
+  // var xScale = d3.scaleLinear() 
+  //   .range([0, width])
+
+  // var yScale = d3.scaleLinear()
+  //   .range([height, 0])
+
+  // var radians = d3.scaleLinear()
+  //   .range([-Math.PI / 2, Math.PI / 2]);
+
+  // var arc = d3.radialLine()
+  //   .curve(d3.curveBasis)
+  //   .angle(function(d){ return radians(d); })
+
+  // var xAxis = d3.axisBottom()
+  //   .scale(xScale)
+
+  // var yAxis = d3.axisLeft()
+  //   .scale(yScale)
+
+  // Define the div for the tooltip
+  // code example:
+  // https://bl.ocks.org/d3noob/180287b6623496dbb5ac4b048813af52
+
+  // Add the svg canvas for powerflow
+  var rt_flow = d3.select("#pf_container")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  
+  const xScale = d3.scaleLinear()
+    .domain([0, 2])
+    .range([ 0, width]);
+
+  // Add Y axis
+  const yScale = d3.scaleLinear()
+    .domain([0, 8])
+    .range([0, height]);
+  
+  var line = d3.line()
+    .x(function(d) { return d[0]; })
+    .y(function(d) { return d[1]; })
+  
+  //Read the data to map nodes
+  d3.json("data/nodes.json").then( function(d) {
+    // console.log(d)
+    // Add nodes
+    rt_flow.append('g')
+    .selectAll("dot")
+    .data(d)
+    .join("circle")
+      .attr("id", function(d) { return d.label.toLowerCase()})
+      // .attr("type", function(d) { return d.label.toLowerCase()})
+      .attr("cx", function (d) { return xScale(d.x); } )
+      .attr("cy", function (d) { return yScale(d.y); } )
+      .attr("r", 5)
+      .style("fill", "#69b3a2")
+  })
+
+  // d3.csv("node_map.csv").then( function(d) {
+  d3.json("data/links.json").then(function(d) {
+    // console.log(d)
+    var path = rt_flow.selectAll("path")
+    .data(d)
+    .join("path")
+      .attr("id", function(d) {
+        return (d.source + "-" + d.target).toLowerCase()
+      })
+      .attr("d", function(d) {
+        // transform the data into this format:
+        // [[0, 0], [1, 1]];
+        d.path = [d.source].concat(d.path, [d.target])
+        const path = line(d.path.map(x => [
+          d3.select("#"+x.toLowerCase()).attr("cx"),
+          d3.select("#"+x.toLowerCase()).attr("cy")]))
+        return path
+      })
+      .attr("stroke", "lightgrey")
+      .attr("stroke-width", 1)
+      .attr("fill", "none")
+      
+      // .attr("type", function(d) { return d.label.toLowerCase()})
+      // .attr("cx", function (d) { return xScale(d.x); } )
+      // .attr("cy", function (d) { return yScale(d.y); } )
+    // console.log(d3.select(this).data)
+      // return d.time >= vis_start_time && d.time <= vis_end_time
+      // return d
+    // Add nodes
+    // rt_flow.append('g')
+    // .data(function(d){
+      // console.log(d)
+    // })
+  })
+
+</script>
+<!-- Create a div where the graph will take place -->
+
+</body>
+</html>
