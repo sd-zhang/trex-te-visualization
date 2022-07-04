@@ -137,6 +137,8 @@
     .x(function(d) { return d[0]; })
     .y(function(d) { return d[1]; })
   
+    
+
   function drawNodes(json_path){
     d3.json(json_path).then(function(d){
     // Add nodes
@@ -176,23 +178,6 @@
       .attr("stroke", "lightgrey")
       .attr("stroke-width", 1)
       .attr("fill", "none")
-
-    // .join("path")
-    //   .attr("id", function(d) {
-    //     return (d.target + "-" + d.source).toLowerCase()
-    //   })
-    //   .attr("d", function(d) {
-    //     // transform the data into this format:
-    //     // [[0, 0], [1, 1]];
-    //     d.path = [d.target].concat(d.path.reverse(), [d.source])
-    //     const path = line(d.path.map(x => [
-    //       d3.select("#"+x.toLowerCase()).attr("cx"),
-    //       d3.select("#"+x.toLowerCase()).attr("cy")]))
-    //     return path
-    //   })
-    //   // .attr("stroke", "lightgrey")
-    //   // .attr("stroke-width", 1)
-    //   .attr("fill", "none")
     console.log('drawn links')
     return d
     }).then(function(d){
@@ -212,9 +197,7 @@
           d3.select("#"+x.toLowerCase()).attr("cy")]))
         return path
       })
-      // .attr("stroke", "red")
       .attr("opacity", 0)
-      // .attr("fill", "none")
       console.log('drawn reverse links')
     })
   }
@@ -290,9 +273,141 @@
 
   // d3.promise(drawNodes, ["data/nodes.json"])
 
-  drawNodes("data/nodes.json")
-  drawLinks("data/links.json")
-  animateFlows("flows2.csv")
+  // drawNodes("data/nodes.json")
+  // drawLinks("data/links.json")
+  // animateFlows("flows2.csv")
+
+Promise.all([
+  d3.json("data/nodes.json"),
+  d3.json("data/links.json"),
+  d3.csv("flows2.csv")
+]).then(function(d) {
+  // Add nodes
+  rt_flow.append('g')
+  .selectAll("dot")
+  .data(d[0])
+  .join("circle")
+    .attr("id", function(d) { return d.label.toLowerCase()})
+    // .attr("type", function(d) { return d.label.toLowerCase()})
+    .attr("cx", function (d) { return xScale(d.x); } )
+    .attr("cy", function (d) { return yScale(d.y); } )
+    .attr("r", 5)
+    .style("fill", "#69b3a2")
+  console.log('drawn nodes')
+  return d
+}).then(function(d){
+  //draw links
+  rt_flow.append('g')
+  .selectAll("path")
+  .data(d[1])
+  .join("path")
+    .attr("id", function(d) {
+      return (d.source + "-" + d.target).toLowerCase()
+    })
+    .attr("d", function(d) {
+      // transform the data into this format:
+      // [[0, 0], [1, 1]];
+      d.path = [d.source].concat(d.path, [d.target])
+      const path = line(d.path.map(x => [
+        d3.select("#"+x.toLowerCase()).attr("cx"),
+        d3.select("#"+x.toLowerCase()).attr("cy")]))
+      return path
+    })
+    .attr("stroke", "lightgrey")
+    .attr("stroke-width", 1)
+    .attr("fill", "none")
+    console.log('drawn links')
+    return d
+}).then(function(d){
+  rt_flow.append('g')
+  .selectAll("path")
+  .data(d[1])
+  .join("path")
+    .attr("id", function(d) {
+      return (d.target + "-" + d.source).toLowerCase()
+    })
+    .attr("d", function(d) {
+      d.path = [d.target].concat(d.path.reverse(), [d.source])
+      const path = line(d.path.map(x => [
+        d3.select("#"+x.toLowerCase()).attr("cx"),
+        d3.select("#"+x.toLowerCase()).attr("cy")]))
+      return path
+    })
+    .attr("opacity", 0)
+    console.log('drawn reverse links')
+    return d
+}).then(function(d){
+  // d[2].time -= vis_start_time
+  d[2].from = "r"+d[2].from
+  d[2].to = "r"+d[2].to
+  d[2].path_id = "#" + d[2].from + "-" +d[2].to
+
+  rt_flow.append('g')
+  .selectAll("circle")
+  .data(d[2].filter(function(d){
+    return d.time >= vis_start_time && d.time <= vis_end_time
+  }))
+  .enter()
+  .append("circle")
+  .attr("class", "flow")
+  .attr("r", function(d){return 2 + d.size * 5})
+  .attr("path_id", function(d){
+    const from = "r"+d.from
+    const to = "r"+d.to
+    const path_id = "#" + from + "-" + to
+    return path_id})
+  .attr("time", function(d){
+    return d.time - vis_start_time
+  })
+  .style("fill", "red")
+  .attr("transform", "translate(" + 0 + ")")
+  .style("opacity", 0)
+
+  transition_circles();
+  function transition_circles(){
+    var circle = d3.selectAll(".flow")
+    // console.log(circle)
+    circle.each(function(pathItem, index){
+    const moveDuration = 5000
+    const moveDelay = (index * 200) + d3.select(this).attr("time") * moveDuration/2
+    console.log(index, d3.select(this).attr("time"), moveDelay)
+    const path = d3.select(d3.select(this).attr("path_id"))
+    d3.select(this)
+    .transition()
+    .ease(d3.easeLinear)
+    .delay(moveDelay)
+    .duration(moveDuration)
+    .on("start", function(d){
+      d3.select(this).style("opacity", 1)
+    })
+    .on("end",function(d){
+      d3.select(this).remove()
+    })
+    .tween("pathTween", function(){return pathTween(
+      d3.select(d3.select(this).attr("path_id")
+      ))})
+    })
+  }
+  function pathTween(path){
+    var length = path.node().getTotalLength(); // Get the length of the path
+    var r = d3.interpolate(0, length); //Set up interpolation from 0 to the path length
+    return function(t){
+      var point = path.node().getPointAtLength(r(t)); // Get the next point along the path
+      d3.select(this) // Select the circle
+        .attr("cx", point.x) // Set the cx
+        .attr("cy", point.y) // Set the cy
+    }
+  }
+  console.log('drawn flows')
+})
+
+
+  // }
+    // files[0] will contain file1.csv
+    // files[1] will contain file2.csv
+// }).catch(function(err) {
+    // handle error here
+// })
 
   
 </script>
