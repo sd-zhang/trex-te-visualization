@@ -89,7 +89,7 @@
   var width = w - margin.left - margin.right;
   var height = h - margin.top - margin.bottom;
 
-  var vis_start_time = 1530451140
+  var vis_start_time = 1530454200
   var vis_end_time = 48
 
   const transition_time = {
@@ -164,6 +164,16 @@ Promise.all([
     .attr("cy", function (d) { return map_yScale(d.y); } )
     .attr("r", 5)
     .style("fill", "#69b3a2")
+    .on("mouseover", function(event, d) {	
+      d3.select(this).transition()
+      .duration(100)
+      .attr("r", 10);
+    })					
+    .on("mouseout", function(event, d) {		
+      d3.select(this).transition()
+      .duration(100)
+      .attr("r", 5);	
+    })
     .on("click", function(d) {
         // var node_id =  d3.select(this).attr('id').substring(1);
         // selected_node =  d3.select(this).attr('id');
@@ -224,10 +234,6 @@ Promise.all([
     })
     .attr("opacity", 0)
     // console.log('drawn reverse links')
-  return d
-}).then(function(d){
-  // setTimeout(3000)
-  //redraw nodes to the right symbols
   return d
 }).then(function(d){
   // setTimeout(1000)
@@ -406,6 +412,10 @@ Promise.all([
     }
   }
   // console.log('drawn flows')
+}).then(function(d){
+  // setTimeout(3000)
+  //redraw nodes to the right symbols
+  return d
 }).catch(function(err) {
     // handle error here
 })
@@ -612,7 +622,7 @@ function update_lines(data, duration) {
 // update_lines(data1, 0)
 function drawBars(){
   if (selected_node in bar_data){
-    update_bars(bar_data[selected_node], 100)
+    update_bars(bar_data[selected_node], 500)
   }
 }
 
