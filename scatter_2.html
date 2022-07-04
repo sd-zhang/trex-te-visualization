@@ -61,13 +61,19 @@
 </style>
 <body>
 <!-- Place all DOM elements here -->
-<div id="pf_container"></div>
-<!-- <div id="pf_container"></div>
-<div id="bar_container"></div>
-<div id="line_container"></div> -->
-<!-- <svg width="100" height="100">
-  <path class="path2">
-</svg> -->
+<div class="container-fluid">
+  <div class="row">
+    <div class="col" id="pf_container"></div>
+    <div class="col">
+      <div class="row">
+        <div class="col" id="bar_container"></div>
+      </div>
+      <div class="row">
+        <div class="col" id="line_container"></div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 
   var w = 200;
@@ -93,30 +99,33 @@
       right: 10
     }
 
-  // var xScale = d3.scaleLinear() 
-  //   .range([0, width])
+  // setting up live data store for bar and line graphs
+  // var selected_node;
+  var selected_node = 'r14';
+  // bar graph
+  const bar_data = {
+    default: [
+    {group: "from", value: 0},
+    {group: "to", value: 0},
+    ]
+  };
 
-  // var yScale = d3.scaleLinear()
-  //   .range([height, 0])
-
-  // var radians = d3.scaleLinear()
-  //   .range([-Math.PI / 2, Math.PI / 2]);
-
-  // var arc = d3.radialLine()
-  //   .curve(d3.curveBasis)
-  //   .angle(function(d){ return radians(d); })
-
-  // var xAxis = d3.axisBottom()
-  //   .scale(xScale)
-
-  // var yAxis = d3.axisLeft()
-  //   .scale(yScale)
+  const line_data = {
+    default: {
+      from: {},
+      to: {}
+    }
+  };
 
   // Define the div for the tooltip
   // code example:
   // https://bl.ocks.org/d3noob/180287b6623496dbb5ac4b048813af52
+  var tooltip_div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
 
   // Add the svg canvas for powerflow
+  // console.log(d3.select("#pf_container").node())
   var rt_flow = d3.select("#pf_container")
     .append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -124,158 +133,18 @@
     .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
   
-  const xScale = d3.scaleLinear()
+  const map_xScale = d3.scaleLinear()
     .domain([0, 2])
     .range([ 0, width]);
 
   // Add Y axis
-  const yScale = d3.scaleLinear()
+  const map_yScale = d3.scaleLinear()
     .domain([0, 8])
     .range([0, height]);
   
   var line = d3.line()
     .x(function(d) { return d[0]; })
     .y(function(d) { return d[1]; })
-  
-    
-
-  function drawNodes(json_path){
-    d3.json(json_path).then(function(d){
-    // Add nodes
-    rt_flow.append('g')
-    .selectAll("dot")
-    .data(d)
-    .join("circle")
-      .attr("id", function(d) { return d.label.toLowerCase()})
-      // .attr("type", function(d) { return d.label.toLowerCase()})
-      .attr("cx", function (d) { return xScale(d.x); } )
-      .attr("cy", function (d) { return yScale(d.y); } )
-      .attr("r", 5)
-      .style("fill", "#69b3a2")
-    console.log('drawn nodes')
-    })
-  }
-
-  function drawLinks(json_path){
-    d3.json(json_path).then(function(d){
-    // Add links
-    rt_flow.append('g')
-    .selectAll("path")
-    .data(d)
-    .join("path")
-      .attr("id", function(d) {
-        return (d.source + "-" + d.target).toLowerCase()
-      })
-      .attr("d", function(d) {
-        // transform the data into this format:
-        // [[0, 0], [1, 1]];
-        d.path = [d.source].concat(d.path, [d.target])
-        const path = line(d.path.map(x => [
-          d3.select("#"+x.toLowerCase()).attr("cx"),
-          d3.select("#"+x.toLowerCase()).attr("cy")]))
-        return path
-      })
-      .attr("stroke", "lightgrey")
-      .attr("stroke-width", 1)
-      .attr("fill", "none")
-    console.log('drawn links')
-    return d
-    }).then(function(d){
-      rt_flow.append('g')
-    .selectAll("path")
-    .data(d)
-    .join("path")
-      .attr("id", function(d) {
-        return (d.target + "-" + d.source).toLowerCase()
-      })
-      .attr("d", function(d) {
-        // transform the data into this format:
-        // [[0, 0], [1, 1]];
-        d.path = [d.target].concat(d.path.reverse(), [d.source])
-        const path = line(d.path.map(x => [
-          d3.select("#"+x.toLowerCase()).attr("cx"),
-          d3.select("#"+x.toLowerCase()).attr("cy")]))
-        return path
-      })
-      .attr("opacity", 0)
-      console.log('drawn reverse links')
-    })
-  }
-  
-  function animateFlows(csv_path) {
-    d3.csv(csv_path, function(d){
-      d.time -= vis_start_time
-      d.from = "r"+d.from
-      d.to = "r"+d.to
-      d.path_id = "#" + d.from + "-" +d.to
-      // d.path = d3.select("#"+path_id).attr("d")
-      // console.log(path_id, path)
-      // d.fromX = d3.select("#"+d.from).attr("cx")
-      // d.fromY = d3.select("#"+d.from).attr("cy")
-      // d.toX = d3.select("#"+d.to).attr("cx")
-      // d.toY = d3.select("#"+d.to).attr("cy")
-      // console.log(d)
-      return d;
-    }).then(function(d) {
-      rt_flow.append('g')
-      .selectAll("circle")
-      .data(d.filter(function(d){
-        return d.time >= vis_start_time && d.time <= vis_end_time
-      }))
-      .enter()
-      .append("circle")
-      .attr("class", "flow")
-      .attr("r", function(d){return 2 + d.size * 5})
-      .attr("path_id", function(d){return d.path_id})
-      .attr("time", function(d){return d.time})
-      .style("fill", "red")
-      .attr("transform", "translate(" + 0 + ")")
-      .style("opacity", 0)
-
-      transition_circles();
-      function transition_circles(){
-        var circle = d3.selectAll(".flow")
-        // console.log(circle)
-        circle.each(function(pathItem, index){
-        const moveDuration = 5000
-        const moveDelay = (index * 200) + d3.select(this).attr("time") * moveDuration/2
-        console.log(index, d3.select(this).attr("time"), moveDelay)
-        const path = d3.select(d3.select(this).attr("path_id"))
-        d3.select(this)
-        .transition()
-        .ease(d3.easeLinear)
-        .delay(moveDelay)
-        .duration(moveDuration)
-        .on("start", function(d){
-          d3.select(this).style("opacity", 1)
-        })
-        .on("end",function(d){
-          d3.select(this).remove()
-        })
-        .tween("pathTween", function(){return pathTween(
-          d3.select(d3.select(this).attr("path_id")
-          ))})
-      })
-    }
-      function pathTween(path){
-        var length = path.node().getTotalLength(); // Get the length of the path
-        var r = d3.interpolate(0, length); //Set up interpolation from 0 to the path length
-        return function(t){
-          var point = path.node().getPointAtLength(r(t)); // Get the next point along the path
-          d3.select(this) // Select the circle
-            .attr("cx", point.x) // Set the cx
-            .attr("cy", point.y) // Set the cy
-        }
-      }
-      console.log('drawn flows')
-    })
-  }
-
-  // d3.promise(drawNodes, ["data/nodes.json"])
-
-  // drawNodes("data/nodes.json")
-  // drawLinks("data/links.json")
-  // animateFlows("flows2.csv")
 
 Promise.all([
   d3.json("data/nodes.json"),
@@ -289,11 +158,11 @@ Promise.all([
   .join("circle")
     .attr("id", function(d) { return d.label.toLowerCase()})
     // .attr("type", function(d) { return d.label.toLowerCase()})
-    .attr("cx", function (d) { return xScale(d.x); } )
-    .attr("cy", function (d) { return yScale(d.y); } )
+    .attr("cx", function (d) { return map_xScale(d.x); } )
+    .attr("cy", function (d) { return map_yScale(d.y); } )
     .attr("r", 5)
     .style("fill", "#69b3a2")
-  console.log('drawn nodes')
+  // console.log('drawn nodes')
   return d
 }).then(function(d){
   //draw links
@@ -316,9 +185,10 @@ Promise.all([
     .attr("stroke", "lightgrey")
     .attr("stroke-width", 1)
     .attr("fill", "none")
-    console.log('drawn links')
-    return d
+    // console.log('drawn links')
+  return d
 }).then(function(d){
+  //draw reverselinks
   rt_flow.append('g')
   .selectAll("path")
   .data(d[1])
@@ -334,14 +204,14 @@ Promise.all([
       return path
     })
     .attr("opacity", 0)
-    console.log('drawn reverse links')
-    return d
+    // console.log('drawn reverse links')
+  return d
 }).then(function(d){
-  // d[2].time -= vis_start_time
-  d[2].from = "r"+d[2].from
-  d[2].to = "r"+d[2].to
-  d[2].path_id = "#" + d[2].from + "-" +d[2].to
-
+  //redraw nodes to the right symbols
+  return d
+}).then(function(d){
+  //draw and animate energy flow
+  // d.from = "r"+d.from
   rt_flow.append('g')
   .selectAll("circle")
   .data(d[2].filter(function(d){
@@ -352,8 +222,8 @@ Promise.all([
   .attr("class", "flow")
   .attr("r", function(d){return 2 + d.size * 5})
   .attr("path_id", function(d){
-    const from = "r"+d.from
-    const to = "r"+d.to
+    const from = d.from.toLowerCase()
+    const to = d.to.toLowerCase()
     const path_id = "#" + from + "-" + to
     return path_id})
   .attr("time", function(d){
@@ -370,7 +240,7 @@ Promise.all([
     circle.each(function(pathItem, index){
     const moveDuration = 5000
     const moveDelay = (index * 200) + d3.select(this).attr("time") * moveDuration/2
-    console.log(index, d3.select(this).attr("time"), moveDelay)
+    // console.log(index, d3.select(this).attr("time"), moveDelay)
     const path = d3.select(d3.select(this).attr("path_id"))
     d3.select(this)
     .transition()
@@ -379,9 +249,52 @@ Promise.all([
     .duration(moveDuration)
     .on("start", function(d){
       d3.select(this).style("opacity", 1)
+
+      console.log(d)
+
+      if (!(d.from in bar_data)){
+        init_bar_data(d.from)
+      }
+      bar_data[d.from][0].value += Number(d.size)
+
+      if (!(d.from in line_data)) {
+      init_line_data(d.from)
+      // console.log(d.time)
+      }
+      
+      if (!(d.time in line_data[d.from].from)) {
+        line_data[d.from].from[d.time] = Number(d.size)
+      }
+      else {
+        line_data[d.from].from[d.time] += Number(d.size)
+      }
     })
     .on("end",function(d){
       d3.select(this).remove()
+      if (!(d.to in bar_data)){
+            init_bar_data(d.to)
+      }
+      bar_data[d.to][1].value += Number(d.size)
+
+      if (!(d.to in line_data)) {
+      init_line_data(d.to)
+      }
+      if (!(d.time in line_data[d.to].to)) {
+        line_data[d.to].to[d.time] = Number(d.size)
+      }
+      else {
+        line_data[d.to].to[d.time] += Number(d.size)
+      }
+      
+      if (selected_node in bar_data){
+        update_bars(bar_data[selected_node], 100)
+      }
+
+      if (selected_node in line_data){
+        result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
+        update_lines(result, 100)
+        // update_lines(bar_data[selected_node], 100)
+      }
     })
     .tween("pathTween", function(){return pathTween(
       d3.select(d3.select(this).attr("path_id")
@@ -398,17 +311,184 @@ Promise.all([
         .attr("cy", point.y) // Set the cy
     }
   }
-  console.log('drawn flows')
+  // console.log('drawn flows')
+}).catch(function(err) {
+    // handle error here
 })
 
+// Add the svg canvas for bar graph
+var	bar_graph = d3.select("#bar_container")
+	.append("svg")
+		.attr("width", 1000)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-  // }
-    // files[0] will contain file1.csv
-    // files[1] will contain file2.csv
-// }).catch(function(err) {
-    // handle error here
-// })
+// X axis
+var bar_x = d3.scaleBand()
+  .range([ 0, 1000 ])
+  .domain(bar_data.default.map(function(d) { return d.group; }))
+  .padding(0.2);
+  bar_graph.append("g")
+  .attr("transform", "translate(0," + height + ")")
+  .call(d3.axisBottom(bar_x))
+  .selectAll("text")
+    .attr("transform", "translate(-10,-20)rotate(-45)")
+    .style("text-anchor", "end");
 
+// Add Y axis
+var bar_y = d3.scaleLinear()
+  .domain([0, 50])
+  .range([ height, 0]);
+  bar_graph.append("g")
+  // .call(d3.axisLeft(y));
+
+// Add the svg canvas for line graph
+var	line_graph = d3.select("#line_container")
+	.append("svg")
+		.attr("width", 1000)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// X axis
+// create a X axis:
+const line_x = d3.scaleLinear().range([0,1000]);
+const line_xAxis = d3.axisBottom().scale(line_x);
+line_graph.append("g")
+  .attr("transform", `translate(0, ${height})`)
+  .attr("class","lineXaxis")
+line_x.domain([0, 48]);
+line_graph.selectAll(".lineXaxis")
+  // .duration(duration)
+  .call(line_xAxis)
+  .selectAll("text")
+  .attr("transform", "translate(-10,-20)")
+  .style("text-anchor", "end");
+
+// Initialize an Y axis
+const line_y = d3.scaleLinear().range([height, 0]);
+const line_yAxis = d3.axisLeft().scale(line_y);
+line_graph.append("g")
+  .attr("class","lineYaxis")
+
+// var line_x = d3.scaleBand()
+//   .domain([0, 48])
+//   .range([0, 1000]);
+//   line_graph.append("g")
+//   .attr("transform", "translate(0," + height + ")")
+//   .call(d3.axisBottom(line_x))
+//   .selectAll("text")
+//     .attr("transform", "translate(-10,-20)rotate(-45)")
+//     .style("text-anchor", "end");
+
+// // Add Y axis
+// var line_y = d3.scaleLinear()
+//   .domain([0, 20])
+//   .range([0, height]);
+//   line_graph.append("g")
+//   .call(d3.axisLeft(line_y))
+//   .selectAll("text")
+//     .attr("transform", "translate(10,0)")
+//     .style("text-anchor", "end");
+
+// Bars
+// A function that create / update the plot for a given variable:
+function init_bar_data(node_id) {
+  bar_data[node_id] = [
+    {group: "from", value: 0},
+    {group: "to", value: 0},
+    // {group: "C", value: 8}
+    ]
+}
+
+function update_bars(data, duration) {
+  console.log(bar_data)
+  console.log(data)
+  var u = bar_graph.selectAll("rect")
+    .data(data)
+    .join("rect")
+    .transition()
+    // .delay(200)
+    .duration(duration)
+    .attr("x", function(d) { return bar_x(d.group); })
+    .attr("y", function(d) { return bar_y(d.value); })
+    .attr("width", bar_x.bandwidth())
+    .attr("height", function(d) { return height - bar_y(d.value); })
+    .attr("fill", "#69b3a2")
+}
+
+// Lines
+function init_line_data(node_id) {
+  line_data[node_id] = {
+    from: {},
+    to: {}
+  }
+}
+
+// const data1 = [
+//    {x: 0.3, y: 4},
+//    {x: 2, y: 16},
+//    {x: 3, y: 8}
+// ];
+
+function update_lines(data, duration) {
+  // Create the X axis:
+  // line_x.domain([0, d3.max(data, function(d) { return d.x }) ]);
+  // line_graph.selectAll(".lineXaxis").transition()
+  //   .duration(duration)
+  //   .call(line_xAxis)
+  //   .selectAll("text")
+  //   .attr("transform", "translate(-10,-20)")
+  //   .style("text-anchor", "end");
+
+  // create the Y axis
+  line_y.domain([0, d3.max(data, function(d) { return d.y  }) ]);
+  line_graph.selectAll(".lineYaxis")
+    .transition()
+    .duration(duration)
+    .call(line_yAxis)
+    .selectAll("text")
+    .attr("transform", "translate(10,0)")
+    .style("text-anchor", "end");
+
+
+  // console.log(bar_data)
+  // console.log(data)
+  // console.log(d3.line(data))
+  var u = line_graph.selectAll(".line")
+    .data([data], function(d){
+      // d.x = d.x.map((x) => +x)
+      // console.log(d)
+      return d.x
+    })
+  u
+  .enter()
+  .append("path")
+  .attr("class", "line")
+  .merge(u)
+  .transition()
+  // .delay(200)
+  .duration(duration)
+  .attr("d", d3.line()
+    .x(function(d) { return line_x(d.x); })
+    .y(function(d) { return line_y(d.y); })
+    )
+  .attr("fill", "none")
+  .attr("stroke", "steelblue")
+  .attr("stroke-width", 2.5)
+}
+
+  // data.map(d => {
+  //   return {
+  //     date: Object.keys(d)[0],
+  //     count: d[Object.keys(d)[0]]
+  //   }
+  // });
+// }
+
+update_bars(bar_data.default, 0)
+// update_lines(data1, 0)
   
 </script>
 </body>
