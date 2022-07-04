@@ -61,10 +61,10 @@
 </style>
 <body>
 <!-- Place all DOM elements here -->
-<div class="container-fluid">
+<div class="container-md">
   <div class="row">
-    <div class="col" id="pf_container"></div>
-    <div class="col">
+    <div class="col-2 offset-2" id="pf_container"></div>
+    <div class="col-5 offset-1">
       <div class="row">
         <div class="col" id="bar_container"></div>
       </div>
@@ -89,7 +89,7 @@
   var width = w - margin.left - margin.right;
   var height = h - margin.top - margin.bottom;
 
-  var vis_start_time = 0
+  var vis_start_time = 1530428460
   var vis_end_time = 48
 
   const transition_time = {
@@ -150,6 +150,7 @@ Promise.all([
   d3.json("data/nodes.json"),
   d3.json("data/links.json"),
   d3.csv("flows2.csv")
+  // d3.csv("20_training_market.csv")
 ]).then(function(d) {
   // Add nodes
   rt_flow.append('g')
@@ -210,95 +211,109 @@ Promise.all([
   //redraw nodes to the right symbols
   return d
 }).then(function(d){
-  //draw and animate energy flow
+  //draw and animate energy transactions
   // d.from = "r"+d.from
   rt_flow.append('g')
   .selectAll("circle")
-  .data(d[2].filter(function(d){
-    return d.time >= vis_start_time && d.time <= vis_end_time
-  }))
+  // .data(d[2].filter(function(d){
+  //   return d.time_consumption 
+  // //   return d.time >= vis_start_time && d.time <= vis_end_time
+  // }))
+  .data(d[2])
   .enter()
   .append("circle")
-  .attr("class", "flow")
-  .attr("r", function(d){return 2 + d.size * 5})
+  .attr("class", "transaction")
+  .attr("r", function(d){return Math.max(2, d.quantity / 5)})
+  // .attr("r", function(d){return 2 + d.quantity / 10})
   .attr("path_id", function(d){
-    const from = d.from.toLowerCase()
-    const to = d.to.toLowerCase()
+    const from = d.seller_id.toLowerCase()
+    const to = d.buyer_id.toLowerCase()
     const path_id = "#" + from + "-" + to
     return path_id})
   .attr("time", function(d){
-    return d.time - vis_start_time
+    return (d.time_purchase - vis_start_time)/60
   })
-  .style("fill", "red")
+  .attr("visible", function(d){
+    // return d.time_consumption
+    return (d.time_consumption != "")
+  })
+  .style("fill", function(d){
+    if (d.energy_source == "solar"){
+      return "blue"
+    }
+    return "red"
+  })
   .attr("transform", "translate(" + 0 + ")")
   .style("opacity", 0)
-
+  // if (function(d){return d.time_consumption})
   transition_circles();
   function transition_circles(){
-    var circle = d3.selectAll(".flow")
+    var circle = d3.selectAll(".transaction")
     // console.log(circle)
     circle.each(function(pathItem, index){
-    const moveDuration = 5000
-    const moveDelay = (index * 200) + d3.select(this).attr("time") * moveDuration/2
-    // console.log(index, d3.select(this).attr("time"), moveDelay)
-    const path = d3.select(d3.select(this).attr("path_id"))
-    d3.select(this)
-    .transition()
-    .ease(d3.easeLinear)
-    .delay(moveDelay)
-    .duration(moveDuration)
-    .on("start", function(d){
-      d3.select(this).style("opacity", 1)
+      // console.log(animate)
+      const moveDuration = 5000
+      const moveDelay = (index * 10) + d3.select(this).attr("time") * moveDuration * 0.8
+      // console.log(index, d3.select(this).attr("time"), moveDelay)
+      const path = d3.select(d3.select(this).attr("path_id"))
+      d3.select(this)
+      .transition()
+      .ease(d3.easeLinear)
+      .delay(moveDelay)
+      .duration(moveDuration)
+      .on("start", function(d){
+        if (d3.select(this).attr("visible") === "true"){
+          d3.select(this).style("opacity", 1)
+        }
 
-      console.log(d)
+        if (!(d.from in bar_data)){
+          init_bar_data(d.from)
+        }
+        bar_data[d.from][0].value += Number(d.size)
 
-      if (!(d.from in bar_data)){
-        init_bar_data(d.from)
-      }
-      bar_data[d.from][0].value += Number(d.size)
+        if (!(d.from in line_data)) {
+        init_line_data(d.from)
+        // console.log(d.time)
+        }
+        
+        if (!(d.time in line_data[d.from].from)) {
+          line_data[d.from].from[d.time] = Number(d.size)
+        }
+        else {
+          line_data[d.from].from[d.time] += Number(d.size)
+        }
+      })
+      .on("end",function(d){
+        d3.select(this).remove()
+        if (!(d.to in bar_data)){
+              init_bar_data(d.to)
+        }
+        bar_data[d.to][1].value += Number(d.size)
 
-      if (!(d.from in line_data)) {
-      init_line_data(d.from)
-      // console.log(d.time)
-      }
-      
-      if (!(d.time in line_data[d.from].from)) {
-        line_data[d.from].from[d.time] = Number(d.size)
-      }
-      else {
-        line_data[d.from].from[d.time] += Number(d.size)
-      }
-    })
-    .on("end",function(d){
-      d3.select(this).remove()
-      if (!(d.to in bar_data)){
-            init_bar_data(d.to)
-      }
-      bar_data[d.to][1].value += Number(d.size)
+        if (!(d.to in line_data)) {
+        init_line_data(d.to)
+        }
+        if (!(d.time in line_data[d.to].to)) {
+          line_data[d.to].to[d.time] = Number(d.size)
+        }
+        else {
+          line_data[d.to].to[d.time] += Number(d.size)
+        }
+        
+        if (selected_node in bar_data){
+          update_bars(bar_data[selected_node], 100)
+        }
 
-      if (!(d.to in line_data)) {
-      init_line_data(d.to)
-      }
-      if (!(d.time in line_data[d.to].to)) {
-        line_data[d.to].to[d.time] = Number(d.size)
-      }
-      else {
-        line_data[d.to].to[d.time] += Number(d.size)
-      }
-      
-      if (selected_node in bar_data){
-        update_bars(bar_data[selected_node], 100)
-      }
-
-      if (selected_node in line_data){
-        result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
-        update_lines(result, 100)
-        // update_lines(bar_data[selected_node], 100)
-      }
-    })
-    .tween("pathTween", function(){return pathTween(
-      d3.select(d3.select(this).attr("path_id")
-      ))})
+        if (selected_node in line_data){
+          result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
+          update_lines(result, 100)
+          // update_lines(bar_data[selected_node], 100)
+        }
+      })
+      .tween("pathTween", function(){return pathTween(
+        d3.select(d3.select(this).attr("path_id")
+        ))
+      })
     })
   }
   function pathTween(path){
