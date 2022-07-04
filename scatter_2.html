@@ -164,6 +164,23 @@ Promise.all([
     .attr("cy", function (d) { return map_yScale(d.y); } )
     .attr("r", 5)
     .style("fill", "#69b3a2")
+    .on("click", function(d) {
+        // var node_id =  d3.select(this).attr('id').substring(1);
+        // selected_node =  d3.select(this).attr('id');
+        // console.log(selected_node)
+        if (!(d3.select(this).attr('id') in bar_data)) {
+          init_bar_data(d3.select(this).attr('id'))
+        }
+        
+        // if (!(d3.select(this).attr('id') in line_data)) {
+        //   init_line_data(d3.select(this).attr('id'))
+        //   // console.log(line_data)
+        // }
+
+        selected_node =  d3.select(this).attr('id')
+        // console.log(selected_node)
+        update_bars(bar_data[selected_node], 1000)
+    })
   // console.log('drawn nodes')
   return d
 }).then(function(d){
@@ -228,8 +245,8 @@ Promise.all([
   .attr("class", "transaction")
   .attr("r", function(d){return Math.max(2, d.quantity / 5)})
   .attr("id", function(d){return d.id})
-  .attr("cx", function (d) {return d3.select("#" + d.seller_id.toLowerCase()).attr("cx")})
-  .attr("cy", function (d) {return d3.select("#" + d.seller_id.toLowerCase()).attr("cy")})
+  // .attr("cx", function (d) {return d3.select("#" + d.seller_id.toLowerCase()).attr("cx")})
+  // .attr("cy", function (d) {return d3.select("#" + d.seller_id.toLowerCase()).attr("cy")})
 
   // .attr("r", function(d){return 2 + d.quantity / 10})
   .attr("path_id", function(d){
@@ -255,7 +272,7 @@ Promise.all([
     }
     return "red"
   })
-  // .attr("transform", "translate(" + 0 + ")")
+  .attr("transform", "translate(" + 0 + ")")
   .style("opacity", 0)
   // if (function(d){return d.time_consumption})
   transition_circles();
@@ -351,9 +368,6 @@ Promise.all([
         //   line_data[d.to].to[d.time] += Number(d.size)
         // }
         
-        if (selected_node in bar_data){
-          update_bars(bar_data[selected_node], 100)
-        }
 
         // if (selected_node in line_data){
         //   result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
@@ -596,6 +610,13 @@ function update_lines(data, duration) {
 // init_bar_data(selected_node)
 // update_bars(bar_data[selected_node], 0)
 // update_lines(data1, 0)
+function drawBars(){
+  if (selected_node in bar_data){
+    update_bars(bar_data[selected_node], 100)
+  }
+}
+
+setInterval(drawBars, 1000)
   
 </script>
 </body>
