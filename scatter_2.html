@@ -137,9 +137,8 @@
     .x(function(d) { return d[0]; })
     .y(function(d) { return d[1]; })
   
-  //Read the data to map nodes
-  d3.json("data/nodes.json").then( function(d) {
-    // console.log(d)
+  function drawNodes(json_path){
+    d3.json(json_path).then(function(d){
     // Add nodes
     rt_flow.append('g')
     .selectAll("dot")
@@ -151,12 +150,15 @@
       .attr("cy", function (d) { return yScale(d.y); } )
       .attr("r", 5)
       .style("fill", "#69b3a2")
-  })
+    console.log('drawn nodes')
+    })
+  }
 
-  // d3.csv("node_map.csv").then( function(d) {
-  d3.json("data/links.json").then(function(d) {
-    // console.log(d)
-    var path = rt_flow.selectAll("path")
+  function drawLinks(json_path){
+    d3.json(json_path).then(function(d){
+    // Add links
+    rt_flow.append('g')
+    .selectAll("path")
     .data(d)
     .join("path")
       .attr("id", function(d) {
@@ -174,22 +176,125 @@
       .attr("stroke", "lightgrey")
       .attr("stroke-width", 1)
       .attr("fill", "none")
-      
-      // .attr("type", function(d) { return d.label.toLowerCase()})
-      // .attr("cx", function (d) { return xScale(d.x); } )
-      // .attr("cy", function (d) { return yScale(d.y); } )
-    // console.log(d3.select(this).data)
-      // return d.time >= vis_start_time && d.time <= vis_end_time
-      // return d
-    // Add nodes
-    // rt_flow.append('g')
-    // .data(function(d){
+
+    // .join("path")
+    //   .attr("id", function(d) {
+    //     return (d.target + "-" + d.source).toLowerCase()
+    //   })
+    //   .attr("d", function(d) {
+    //     // transform the data into this format:
+    //     // [[0, 0], [1, 1]];
+    //     d.path = [d.target].concat(d.path.reverse(), [d.source])
+    //     const path = line(d.path.map(x => [
+    //       d3.select("#"+x.toLowerCase()).attr("cx"),
+    //       d3.select("#"+x.toLowerCase()).attr("cy")]))
+    //     return path
+    //   })
+    //   // .attr("stroke", "lightgrey")
+    //   // .attr("stroke-width", 1)
+    //   .attr("fill", "none")
+    console.log('drawn links')
+    return d
+    }).then(function(d){
+      rt_flow.append('g')
+    .selectAll("path")
+    .data(d)
+    .join("path")
+      .attr("id", function(d) {
+        return (d.target + "-" + d.source).toLowerCase()
+      })
+      .attr("d", function(d) {
+        // transform the data into this format:
+        // [[0, 0], [1, 1]];
+        d.path = [d.target].concat(d.path.reverse(), [d.source])
+        const path = line(d.path.map(x => [
+          d3.select("#"+x.toLowerCase()).attr("cx"),
+          d3.select("#"+x.toLowerCase()).attr("cy")]))
+        return path
+      })
+      // .attr("stroke", "red")
+      .attr("opacity", 0)
+      // .attr("fill", "none")
+      console.log('drawn reverse links')
+    })
+  }
+  
+  function animateFlows(csv_path) {
+    d3.csv(csv_path, function(d){
+      d.time -= vis_start_time
+      d.from = "r"+d.from
+      d.to = "r"+d.to
+      d.path_id = "#" + d.from + "-" +d.to
+      // d.path = d3.select("#"+path_id).attr("d")
+      // console.log(path_id, path)
+      // d.fromX = d3.select("#"+d.from).attr("cx")
+      // d.fromY = d3.select("#"+d.from).attr("cy")
+      // d.toX = d3.select("#"+d.to).attr("cx")
+      // d.toY = d3.select("#"+d.to).attr("cy")
       // console.log(d)
-    // })
-  })
+      return d;
+    }).then(function(d) {
+      rt_flow.append('g')
+      .selectAll("circle")
+      .data(d.filter(function(d){
+        return d.time >= vis_start_time && d.time <= vis_end_time
+      }))
+      .enter()
+      .append("circle")
+      .attr("class", "flow")
+      .attr("r", function(d){return 2 + d.size * 5})
+      .attr("path_id", function(d){return d.path_id})
+      .attr("time", function(d){return d.time})
+      .style("fill", "red")
+      .attr("transform", "translate(" + 0 + ")")
+      .style("opacity", 0)
 
+      transition_circles();
+      function transition_circles(){
+        var circle = d3.selectAll(".flow")
+        // console.log(circle)
+        circle.each(function(pathItem, index){
+        const moveDuration = 5000
+        const moveDelay = (index * 200) + d3.select(this).attr("time") * moveDuration/2
+        console.log(index, d3.select(this).attr("time"), moveDelay)
+        const path = d3.select(d3.select(this).attr("path_id"))
+        d3.select(this)
+        .transition()
+        .ease(d3.easeLinear)
+        .delay(moveDelay)
+        .duration(moveDuration)
+        .on("start", function(d){
+          d3.select(this).style("opacity", 1)
+        })
+        .on("end",function(d){
+          d3.select(this).remove()
+        })
+        .tween("pathTween", function(){return pathTween(
+          d3.select(d3.select(this).attr("path_id")
+          ))})
+      })
+    }
+      function pathTween(path){
+        var length = path.node().getTotalLength(); // Get the length of the path
+        var r = d3.interpolate(0, length); //Set up interpolation from 0 to the path length
+        return function(t){
+          var point = path.node().getPointAtLength(r(t)); // Get the next point along the path
+          d3.select(this) // Select the circle
+            .attr("cx", point.x) // Set the cx
+            .attr("cy", point.y) // Set the cy
+        }
+      }
+      console.log('drawn flows')
+    })
+  }
+
+  // d3.promise(drawNodes, ["data/nodes.json"])
+
+  drawNodes("data/nodes.json")
+  drawLinks("data/links.json")
+  animateFlows("flows2.csv")
+
+  
 </script>
-<!-- Create a div where the graph will take place -->
-
 </body>
 </html>
