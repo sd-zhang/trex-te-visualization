@@ -189,7 +189,10 @@ Promise.all([
 
         selected_node =  d3.select(this).attr('id')
         // console.log(selected_node)
+        
+        clearInterval(draw_timer);
         update_bars(bar_data[selected_node], 1000)
+        draw_timer = setInterval(drawBars, 1000)
     })
   // console.log('drawn nodes')
   return d
@@ -626,7 +629,8 @@ function drawBars(){
   }
 }
 
-setInterval(drawBars, 1000)
+var draw_timer = setInterval(drawBars, 1000)
+// clearInterval(timer);
   
 </script>
 </body>
