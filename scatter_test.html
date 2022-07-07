@@ -183,13 +183,16 @@
 
 
   //Read the data to map nodes
-  d3.csv("node_map.csv").then( function(d) {
+  // d3.csv("node_map.csv").then( function(d) {
+  d3.json("data/nodes.json").then( function(d) {
+    // console.log(d)
     // Add nodes
     rt_flow.append('g')
     .selectAll("dot")
     .data(d)
     .join("circle")
-      .attr("id", function(d) { return d.label})
+      .attr("id", function(d) { return d.label.toLowerCase()})
+      // .attr("type", function(d) { return d.label.toLowerCase()})
       .attr("cx", function (d) { return xScale(d.x); } )
       .attr("cy", function (d) { return yScale(d.y); } )
       .attr("r", 5)
@@ -232,27 +235,6 @@
         result = Object.entries(line_data[selected_node].from).map(([x, y]) => ({x, y}))
         // result = Object.entries(line_data[selected_node].from)
         update_lines(result, 1000)
-        // console.log(result)
-        // console.log(line_data[selected_node].from)
-
-        
-        // line_data[selected_node].from['x'] = 1
-        // console.log(x in line_data[selected_node].from)
-        // line_data[selected_node].from['x'] = 1
-        // // console.log(line_data[selected_node])
-        // console.log(('x' in line_data[selected_node].from))
-        
-
-        // if (node_id % 2 == 0) {
-        //   update_bars(bar_data.data2, 1000)
-        // } 
-        // else{
-        //   update_bars(bar_data.data1, 1000)
-        // }
-        
-        // update_bars(data2)
-        // d3.select(this).attr('id');
-        // console.log(node_id)
       })
   })
 
@@ -318,46 +300,44 @@
   }
 
   var circle = rt_flow.selectAll("circle")
-      .data(data.filter(function(d){
-        return d.time >= vis_start_time && d.time <= vis_end_time
-        // return d
-      }))
-      // .data(data.filter(function(d){
-      //     return d.From > 2010
-      //   }))
-      .enter()
-      .append("circle")
-      .attr("r", function(d){
-      // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
-      return 2 + d.size * 5})
-      // .attr("r", 3)
-      .style("fill", "red")
-      .attr("transform", "translate(" + 0 + ")")
-      // .attr("d", function(d){
-      //   return [d.from, d.to, d.size]
-      // })
-      .style("opacity", 0)
-      .on("mouseover", function(event, d) {	
-        // const[mouse_x, mouse_y] = d3.pointer(event)	
-        // console.log(mouse_x, mouse_y)
-        tooltip_div.transition()		
-          .duration(200)		
-          .style("opacity", .9);		
-        tooltip_div	.html(d.size)	
-          // .style("left", mouse_x + "px")		
-          // .style("top", (mouse_y - 28) + "px");
-          .style("left", (event.pageX) + "px")
-          .style("top", (event.pageY - 28) + "px");
-        })					
-      .on("mouseout", function(d) {		
-        tooltip_div.transition()		
-          .duration(500)		
-          .style("opacity", 0);	
-      })
-      
-      // bar_data
+    .data(data.filter(function(d){
+      return d.time >= vis_start_time && d.time <= vis_end_time
+      // return d
+    }))
+    // .data(data.filter(function(d){
+    //     return d.From > 2010
+    //   }))
+    .enter()
+    .append("circle")
+    .attr("r", function(d){
+    // return bezierLine([[d.fromX, d.fromY], [3, -1], [d.toX, d.toY]])
+    return 2 + d.size * 5})
+    // .attr("r", 3)
+    .style("fill", "red")
+    .attr("transform", "translate(" + 0 + ")")
+    // .attr("d", function(d){
+    //   return [d.from, d.to, d.size]
+    // })
+    .style("opacity", 0)
+    .on("mouseover", function(event, d) {	
+      // const[mouse_x, mouse_y] = d3.pointer(event)	
+      // console.log(mouse_x, mouse_y)
+      tooltip_div.transition()		
+        .duration(200)		
+        .style("opacity", .9);		
+      tooltip_div	.html(d.size)	
+        // .style("left", mouse_x + "px")		
+        // .style("top", (mouse_y - 28) + "px");
+        .style("left", (event.pageX) + "px")
+        .style("top", (event.pageY - 28) + "px");
+      })					
+    .on("mouseout", function(d) {		
+      tooltip_div.transition()		
+        .duration(500)		
+        .style("opacity", 0);	
+    })
 
-  transition_circles();
+    transition_circles();
 
   function transition_circles(){
       circle.each(function(pathItem, index){
@@ -487,7 +467,7 @@ var bar_x = d3.scaleBand()
 
 // Add Y axis
 var bar_y = d3.scaleLinear()
-  .domain([0, 20])
+  .domain([0, 50])
   .range([ height, 0]);
   bar_graph.append("g")
   // .call(d3.axisLeft(y));
@@ -558,6 +538,7 @@ function update_bars(data, duration) {
     .data(data)
     .join("rect")
     .transition()
+    // .delay(200)
     .duration(duration)
     .attr("x", function(d) { return bar_x(d.group); })
     .attr("y", function(d) { return bar_y(d.value); })
@@ -616,6 +597,7 @@ function update_lines(data, duration) {
   .attr("class", "line")
   .merge(u)
   .transition()
+  // .delay(200)
   .duration(duration)
   .attr("d", d3.line()
     .x(function(d) { return line_x(d.x); })
