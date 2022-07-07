@@ -505,7 +505,7 @@ function update_bars(d, duration) {
   groups.selectAll(".bar_text").remove();
   groups.append("text")
     .attr("class", "bar_text")
-    .attr("x", 12)
+    // .attr("x", 12)
     .attr("y", bar_y.bandwidth() * 1.2)
     .attr("text-anchor", "left")
 
@@ -513,27 +513,27 @@ function update_bars(d, duration) {
     .text(function(d) { 
       // console.log(d[0].data.self)
       var text = []
-      if (d[1].data.self > 0){
-        text.push(d[0].data.self/1000 + " kWh from solar")
+      if (d[0].data.self > 0){
+        text.push(d[0].data.self + " Wh from solar")
       }
-      if (d[1].data.battery > 0){
-        text.push(d[0].data.battery/1000 + " kWh from battery")
+      if (d[0].data.battery > 0){
+        text.push(d[0].data.battery + " Wh from battery")
       }
-      if (d[1].data.community > 0){
-        text.push(d[0].data.community/1000 + " kWh from community")
+      if (d[0].data.community > 0){
+        text.push(d[0].data.community + " Wh from community")
       }
-      if (d[1].data.grid > 0){
-        text.push(d[0].data.grid/1000 + " kWh from grid")
+      if (d[0].data.grid > 0){
+        text.push(d[0].data.grid + " Wh from grid")
       }
 
       return  text.join(" | ")
     })
     .style("fill", "#000000")
-    .style("font-size", "6px");
+    .style("font-size", "0.5em");
 
   groups.append("text")
     .attr("class", "bar_text")
-    .attr("x", 12)
+    // .attr("x", 12)
     .attr("y", bar_y.bandwidth() * 2.2)
     .attr("text-anchor", "left")
 
@@ -542,22 +542,22 @@ function update_bars(d, duration) {
       // console.log(d[1].data)
       var text = []
       if (d[1].data.self > 0){
-        text.push(d[0].data.self/1000 + " kWh consumed")
+        text.push(d[0].data.self + " Wh consumed")
       }
       if (d[1].data.battery > 0){
-        text.push(d[1].data.battery/1000 + " kWh stored")
+        text.push(d[1].data.battery + " Wh stored")
       }
       if (d[1].data.community > 0){
-        text.push(d[1].data.community/1000 + " kWh sold to community")
+        text.push(d[1].data.community + " Wh sold to community")
       }
       if (d[1].data.grid > 0){
-        text.push(d[1].data.grid/1000 + " kWh sold to grid")
+        text.push(d[1].data.grid + " Wh sold to grid")
       }
 
       return  text.join(" | ")
     })
     .style("fill", "#000000")
-    .style("font-size", "6px");
+    .style("font-size", "0.5em");
 }
 
 // Lines
