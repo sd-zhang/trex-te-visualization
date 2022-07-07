@@ -480,6 +480,7 @@ function update_bars(d, duration) {
   // console.log(data)
   var dataset = d3.stack()
     .offset(d3.stackOffsetExpand)
+    .order(d3.stackOrderReverse)
     .keys(["self", "battery", "community", "grid"])
     .value((d, key) => d[key] ?? 0)
     (bar_data[selected_node])
