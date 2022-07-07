@@ -106,8 +106,8 @@
   const bar_data = {
     default: [
       {category: "Consumption", self: 1, battery: 2, community: 3, grid: 4},
-      {category: "Solar Production", self: 5, battery: 6, community: 7, grid: 8},
-      {category: "Battery", self: 9, community: 10, grid: 11}
+      {category: "Production", self: 5, battery: 6, community: 7, grid: 8}
+      // {category: "Battery", self: 9, community: 10, grid: 11}
     ]
   };
 
@@ -455,8 +455,8 @@ var bar_x = d3.scaleLinear()
 function init_bar_data(node_id) {
   bar_data[node_id] = [
     {category: "Consumption", self: 0, battery: 0, community: 0, grid: 0},
-    {category: "Solar Production", self: 0, battery: 0, community: 0, grid: 0},
-    {category: "Battery", self: 0, community: 0, grid: 0}
+    {category: "Production", self: 0, battery: 0, community: 0, grid: 0}
+    // {category: "Battery", self: 0, community: 0, grid: 0}
   ]
 }
 
@@ -515,7 +515,7 @@ function update_bars(d, duration) {
       // console.log(d[0].data.self)
       var text = []
       if (d[0].data.self > 0){
-        text.push(d[0].data.self + " Wh from solar")
+        text.push(d[0].data.self + " Wh from self")
       }
       if (d[0].data.battery > 0){
         text.push(d[0].data.battery + " Wh from battery")
