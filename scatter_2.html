@@ -603,15 +603,11 @@ function update_lines(data, duration) {
     .style("text-anchor", "end");
 
   // create the Y axis
-  // cumsum_y = d3.cumsum(result, d => d.y)
-  // cumsum_y = Object.entries(cumsum_y).map((y) => ({y}))
-  // console.log(cumsum_y)
   line_y.domain([
-    // d3.min(cumsum_y),
-    // d3.max(cumsum_y)
     d3.min(result, function(d){return d.y}), 
     d3.max(result, function(d){return d.y})
   ]);
+
   line_graph.selectAll(".lineYaxis")
     .transition()
     .duration(duration)
@@ -620,10 +616,10 @@ function update_lines(data, duration) {
     .attr("transform", "translate(10,0)")
     .style("text-anchor", "end");
 
+  var net_profit_line = d3.line()
+    .x(function(d) { return line_x(d.x); })
+    .y(function(d) { return line_y(d.y); });
 
-  // console.log(bar_data)
-  // console.log(data)
-  // console.log(d3.line(data))
   var u = line_graph.selectAll(".line")
     .data([result], function(d){
       // d.x = d.x.map((x) => +x)
@@ -638,11 +634,7 @@ function update_lines(data, duration) {
   .transition()
   // .delay(200)
   .duration(duration)
-  .attr("d", d3.line()
-    .x(function(d) { return line_x(d.x); })
-    // .y([cumsum_y])
-    .y(function(d) { return line_y(d.y); })
-    )
+  .attr("d", net_profit_line)
   .attr("fill", "none")
   .attr("stroke", "steelblue")
   .attr("stroke-width", 2.5)
