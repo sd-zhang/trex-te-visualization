@@ -354,7 +354,7 @@ Promise.all([
 
         if (!(seller_id in line_data)){init_line_data(seller_id)}
         if (!(buyer_id in line_data)){init_line_data(buyer_id)}
-        calculate_profits(d)
+        calculate_profits(d, "net_profit")
       })
 // now the element is loaded
       .tween("pathTween", function(){return pathTween(d3.select(this).attr("path_id"))
@@ -590,8 +590,8 @@ line_graph.append("g")
 
 function init_line_data(node_id) {
   line_data[node_id] = {
-    net_profit: {},
-    nb_equiv: {}
+    "net_profit": {},
+    "nb_equiv": {}
     // to: {}
   }
 }
@@ -683,12 +683,12 @@ function drawBars(){
   if (selected_node in line_data){
     // result = Object.entries(line_data[selected_node].net_profit).map(([x, y]) => ({x, y}))
     // console.log(result)
-    update_lines(line_data[selected_node].net_profit, 500)
+    update_lines(line_data[selected_node]["net_profit"], 500)
     // update_lines(bar_data[selected_node], 100)
   }
 }
 
-function calculate_profits(d){
+function calculate_profits(d, field){
   const seller_id = d.seller_id.toLowerCase()
   const buyer_id = d.buyer_id.toLowerCase()
   const quantity = Number(d.quantity)
@@ -700,20 +700,19 @@ function calculate_profits(d){
   const cost = d.settlement_price_buy * quantity
   const profit = d.settlement_price_sell * quantity
 
-  if (!(time_purchase in line_data[buyer_id].net_profit)){
-    line_data[buyer_id].net_profit[time_purchase] = last_net_profit_buyer - cost
+  if (!(time_purchase in line_data[buyer_id][field])){
+    line_data[buyer_id][field][time_purchase] = last_net_profit_buyer - cost
   }
   else{
-    line_data[buyer_id].net_profit[time_purchase] -= cost
+    line_data[buyer_id][field][time_purchase] -= cost
   }
 
-  if (!(time_purchase in line_data[seller_id].net_profit)){
-    line_data[seller_id].net_profit[time_purchase] = last_net_profit_seller + profit
+  if (!(time_purchase in line_data[seller_id][field])){
+    line_data[seller_id][field][time_purchase] = last_net_profit_seller + profit
   }
   else{
-    line_data[seller_id].net_profit[time_purchase] += profit
+    line_data[seller_id][field][time_purchase] += profit
   }
-
   last_time_purchase = time_purchase
 }
 
