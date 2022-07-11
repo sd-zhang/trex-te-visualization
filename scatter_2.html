@@ -102,7 +102,9 @@
   // setting up live data store for bar and line graphs
   // var selected_node;
   var selected_node = 'r5';
-  var last_time_purchase = null;
+  var last_time_purchase = {
+    net_profit: null,
+    nb_equiv: null};
   // bar graph
   const bar_data = {
     default: [
@@ -572,8 +574,8 @@ line_graph.append("g")
 
 function init_line_data(node_id) {
   line_data[node_id] = {
-    "net_profit": {},
-    "nb_equiv": {}
+    net_profit: {},
+    nb_equiv: {}
     // to: {}
   }
 }
@@ -693,7 +695,7 @@ function drawBars(){
   }
 }
 
-function calculate_profits(d, field){
+function calculate_profits(d){
   var last_net_profit_buyer = (typeof last_net_profit_buyer === 'undefined') ? 0 : last_net_profit_buyer
   var last_net_profit_seller = (typeof last_net_profit_seller === 'undefined') ? 0 : last_net_profit_seller
   // var last_net_profit_seller = 0
@@ -701,22 +703,45 @@ function calculate_profits(d, field){
   const cost = d.settlement_price_buy * d.quantity
   const profit = d.settlement_price_sell * d.quantity
 
-  if (!(time_purchase in line_data[d.buyer_id][field])){
-    line_data[d.buyer_id][field][time_purchase] = last_net_profit_buyer - cost
+  if (!(time_purchase in line_data[d.buyer_id].net_profit)){
+    line_data[d.buyer_id].net_profit[time_purchase] = last_net_profit_buyer - cost
   }
   else{
-    line_data[d.buyer_id][field][time_purchase] -= cost
+    line_data[d.buyer_id].net_profit[time_purchase] -= cost
   }
 
-  if (!(time_purchase in line_data[d.seller_id][field])){
-    line_data[d.seller_id][field][time_purchase] = last_net_profit_seller + profit
+  if (!(time_purchase in line_data[d.seller_id].net_profit)){
+    line_data[d.seller_id].net_profit[time_purchase] = last_net_profit_seller + profit
   }
   else{
-    line_data[d.seller_id][field][time_purchase] += profit
+    line_data[d.seller_id].net_profit[time_purchase] += profit
   }
+  last_time_purchase.net_profit = time_purchase
+}
 
-  // console.log(line_data[seller_id][field])
-  last_time_purchase = time_purchase
+function calculate_nb_equiv(d){
+  var last_net_profit_buyer = (typeof last_net_profit_buyer === 'undefined') ? 0 : last_net_profit_buyer
+  var last_net_profit_seller = (typeof last_net_profit_seller === 'undefined') ? 0 : last_net_profit_seller
+  const time_purchase = d.time_consumption
+  if (time_purchase !== null){
+    const cost = 0.069*2.1 * d.quantity
+    const profit = 0.069 * d.quantity
+
+    if (!(time_purchase in line_data[d.buyer_id].nb_equiv)){
+      line_data[d.buyer_id].nb_equiv[time_purchase] = last_net_profit_buyer - cost
+    }
+    else{
+      line_data[d.buyer_id].nb_equiv[time_purchase] -= cost
+    }
+
+    if (!(time_purchase in line_data[d.seller_id].nb_equiv)){
+      line_data[d.seller_id].nb_equiv[time_purchase] = last_net_profit_seller + profit
+    }
+    else{
+      line_data[d.seller_id].nb_equiv[time_purchase] += profit
+    }
+    last_time_purchase.nb_equiv = time_purchase
+  }
 }
 
 function update_line_data(d){
@@ -726,8 +751,8 @@ function update_line_data(d){
   if (!(d.seller_id in line_data)){init_line_data(d.seller_id)}
   if (!(d.buyer_id in line_data)){init_line_data(d.buyer_id)}
 
-  calculate_profits(d, "net_profit")
-  calculate_profits(d, "nb_equiv")
+  calculate_profits(d)
+  calculate_nb_equiv(d)
 }
 
 var draw_timer = setInterval(drawBars, 1000)
