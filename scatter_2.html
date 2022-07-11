@@ -194,7 +194,7 @@ Promise.all([
         
         clearInterval(draw_timer);
         update_bars(bar_data[selected_node], 1000)
-        update_lines(line_data[selected_node].net_profit, 1000)
+        update_lines(line_data[selected_node], 1000)
         draw_timer = setInterval(drawBars, 1000)
     })
   // console.log('drawn nodes')
@@ -587,13 +587,14 @@ function init_line_data(node_id) {
 // ];
 
 function update_lines(data, duration) {
-  result = Object.entries(data).map(([x, y]) => ({x, y}))
+  net_profit_data = Object.entries(data.net_profit).map(([x, y]) => ({x, y}))
+  nb_equiv_data = Object.entries(data.nb_equiv).map(([x, y]) => ({x, y}))
   // console.log(result)
 
   // Create the X axis:
   line_x.domain([
-    d3.min(result, function(d) {return d.x}), 
-    d3.max(result, function(d) {return d.x})
+    d3.min(net_profit_data, function(d) {return d.x}), 
+    d3.max(net_profit_data, function(d) {return d.x})
   ]);
   line_graph.selectAll(".lineXaxis").transition()
     .duration(duration)
@@ -604,8 +605,8 @@ function update_lines(data, duration) {
 
   // create the Y axis
   line_y.domain([
-    d3.min(result, function(d){return d.y}), 
-    d3.max(result, function(d){return d.y})
+    d3.min(net_profit_data, function(d){return d.y}), 
+    d3.max(net_profit_data, function(d){return d.y})
   ]);
 
   line_graph.selectAll(".lineYaxis")
@@ -616,25 +617,37 @@ function update_lines(data, duration) {
     .attr("transform", "translate(10,0)")
     .style("text-anchor", "end");
 
-  var net_profit_line = d3.line()
+  var profit_line = d3.line()
     .x(function(d) { return line_x(d.x); })
     .y(function(d) { return line_y(d.y); });
 
-  var u = line_graph.selectAll(".line")
-    .data([result], function(d){
-      // d.x = d.x.map((x) => +x)
-      // console.log(d)
-      return d.x
-    })
-  u
+  var v = line_graph.selectAll(".nbe_line")
+    .data([nb_equiv_data], function(d){return d.x})
+  v
+  // line_graph
   .enter()
   .append("path")
-  .attr("class", "line")
-  .merge(u)
+  .attr("class", "nbe_line")
+  .merge(v)
   .transition()
   // .delay(200)
   .duration(duration)
-  .attr("d", net_profit_line)
+  .attr("d", profit_line)
+  .attr("fill", "none")
+  .attr("stroke", "orange")
+  .attr("stroke-width", 2.5)
+
+  var u = line_graph.selectAll(".np_line")
+    .data([net_profit_data], function(d){return d.x})
+  u
+  // line_graph
+  .enter()
+  .append("path")
+  .attr("class", "np_line")
+  .merge(u)
+  .transition()
+  .duration(duration)
+  .attr("d", profit_line)
   .attr("fill", "none")
   .attr("stroke", "steelblue")
   .attr("stroke-width", 2.5)
@@ -682,7 +695,7 @@ function drawBars(){
   if (selected_node in line_data){
     // result = Object.entries(line_data[selected_node].net_profit).map(([x, y]) => ({x, y}))
     // console.log(result)
-    update_lines(line_data[selected_node]["net_profit"], 500)
+    update_lines(line_data[selected_node], 500)
     // update_lines(bar_data[selected_node], 100)
   }
 }
@@ -715,7 +728,9 @@ function calculate_nb_equiv(d){
   var last_net_profit_buyer = (typeof last_net_profit_buyer === 'undefined') ? 0 : last_net_profit_buyer
   var last_net_profit_seller = (typeof last_net_profit_seller === 'undefined') ? 0 : last_net_profit_seller
   const time_purchase = d.time_consumption
-  if (time_purchase !== null){
+
+  // console.log(time_purchase, time_purchase !== "")
+  if (time_purchase != ""){
     const cost = 0.069*2.1 * d.quantity
     const profit = 0.069 * d.quantity
 
