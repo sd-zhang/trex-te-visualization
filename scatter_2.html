@@ -462,7 +462,7 @@ function update_bars(d, duration) {
       .attr('height', bar_y.bandwidth()/2)
       // 'width', x0.rangeBand() / barData.length - groupSpacing
       .attr('width', d => bar_x(d[0]) - bar_x(d[1]))
-      .attr("transform", "translate(10, 0)")
+      .attr("transform", "translate(5, 0)")
     // .attr("fill", "#69b3a2")
   bar_graph.selectAll(".barYaxis")
     .transition()
@@ -576,6 +576,12 @@ const line_yAxis = d3.axisLeft()
 
 line_graph.append("g")
   .attr("class","lineYaxis")
+
+// line_graph.append("circle").attr("cx",250).attr("cy",0).attr("r", 6).style("fill", "#69b3a2")
+// line_graph.append("circle").attr("cx",250).attr("cy",20).attr("r", 6).style("fill", "#404080")
+// line_graph.append("text").attr("x", 270).attr("y", 0).text("ALEX").style("font-size", "11px").attr("alignment-baseline","middle")
+// line_graph.append("text").attr("x", 270).attr("y", 20).text("Net Billing").style("font-size", "11px").attr("alignment-baseline","middle")
+
   // .attr("transform", "translate(-50)rotate(-45)")
 
 // var line_x = d3.scaleBand()
@@ -633,7 +639,11 @@ function update_lines(data, duration) {
 
   // create the Y axis
   line_y.domain([
-    d3.min(net_profit_data, function(d){return d.y}), 
+    // Math.min(
+    d3.min(net_profit_data, function(d){return d.y}),
+      // d3.min(nb_equiv_data, function(d){return d.y}))
+    
+    // , 
     d3.max(net_profit_data, function(d){return d.y})
   ]);
 
@@ -679,6 +689,38 @@ function update_lines(data, duration) {
   .attr("fill", "none")
   .attr("stroke", "steelblue")
   .attr("stroke-width", 2.5)
+
+  line_graph.selectAll(".line_legend").remove();
+  line_graph.append("circle")
+    .attr("class", "line_legend")
+    .attr("cx",250)
+    .attr("cy",0)
+    .attr("r", 6)
+    .style("fill", "steelblue")
+
+  line_graph.append("circle")
+    .attr("class", "line_legend")
+    .attr("cx",250)
+    .attr("cy",20)
+    .attr("r", 6)
+    .style("fill", "orange")
+
+  line_graph.append("text")
+    .attr("class", "line_legend")
+    .attr("x", 270)
+    .attr("y", 0)
+    .text("ALEX")
+    .style("font-size", "11px")
+    .attr("alignment-baseline","middle")
+
+  line_graph.append("text")
+    .attr("class", "line_legend")
+    .attr("x", 270)
+    .attr("y", 20)
+    .text("Net Billing")
+    .style("font-size", "11px")
+    // .style("outline: thin solid red")
+    .attr("alignment-baseline","middle")
 }
 
   // data.map(d => {
