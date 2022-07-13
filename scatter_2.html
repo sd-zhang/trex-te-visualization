@@ -101,7 +101,8 @@
 
   // setting up live data store for bar and line graphs
   // var selected_node;
-  var selected_node = 'r5';
+  // var selected_node = 'r5';
+  var selected_node = null;
   var last_time_purchase = {
     net_profit: null,
     nb_equiv: null};
@@ -385,24 +386,29 @@ var	bar_graph = d3.select("#bar_container")
 		.attr("width", "100%")
 		.attr("height", height/2 + margin.top + margin.bottom)
 	.append("g")
-		// .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // Y axis
 var bar_y = d3.scaleBand()
   .range([ 0, height/2 ])
   .domain(bar_data.default.map(function(d) { return d.category; }))
   .padding(0.2);
-  bar_graph.append("g")
+
+bar_graph.append("g")
+  .attr("class","barYaxis")
+
+bar_graph.select('.domain')
+  .attr('stroke-width', 0);
   // .attr("transform", "translate(0," + height + ")")
   // .call(d3.axisLeft(bar_y))
-  .selectAll("text")
-    .attr("transform", "translate(-10,-20)rotate(-45)")
-    .style("text-anchor", "end");
+  // .selectAll("text")
+  //   .attr("transform", "translate(0,-20)rotate(-45)")
+  //   .style("text-anchor", "end");
 
 // Add X axis
 var bar_x = d3.scaleLinear()
   .domain([0, 1])
-  .range([ width * 2, 0]);
+  .range([ width * 3, 0]);
   bar_graph.append("g")
   // .call(d3.axisLeft(y));
 
@@ -456,7 +462,16 @@ function update_bars(d, duration) {
       .attr('height', bar_y.bandwidth()/2)
       // 'width', x0.rangeBand() / barData.length - groupSpacing
       .attr('width', d => bar_x(d[0]) - bar_x(d[1]))
+      .attr("transform", "translate(10, 0)")
     // .attr("fill", "#69b3a2")
+  bar_graph.selectAll(".barYaxis")
+    .transition()
+    .duration(duration)
+    .call(d3.axisLeft(bar_y))
+    // .call(bar_graph => bar_graph.select(".domain").remove())
+    .selectAll("text")
+    .attr("transform", "translate(0,-20)rotate(-45)")
+    .style("text-anchor", "end");
   
   groups.selectAll(".bar_text").remove();
   groups.append("text")
@@ -464,6 +479,7 @@ function update_bars(d, duration) {
     // .attr("x", 12)
     .attr("y", bar_y.bandwidth() * 1.2)
     .attr("text-anchor", "left")
+    .attr("transform", "translate(10, 0)")
 
     // .attr("transform", "translate(-10,-20)")
     .text(function(d) { 
@@ -492,6 +508,7 @@ function update_bars(d, duration) {
     // .attr("x", 12)
     .attr("y", bar_y.bandwidth() * 2.4)
     .attr("text-anchor", "left")
+    .attr("transform", "translate(10, 0)")
 
     // .attr("transform", "translate(-10,-20)")
     .text(function(d) { 
@@ -504,10 +521,10 @@ function update_bars(d, duration) {
         text.push(d[1].data.battery + "Wh stored")
       }
       if (d[1].data.community > 0){
-        text.push(d[1].data.community + "Wh sold to community")
+        text.push(d[1].data.community + "Wh to community")
       }
       if (d[1].data.grid > 0){
-        text.push(d[1].data.grid + "Wh sold to grid")
+        text.push(d[1].data.grid + "Wh to grid")
       }
 
       return  text.join(" | ")
