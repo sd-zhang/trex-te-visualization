@@ -82,7 +82,7 @@
   const margin = {
       top: 10,
       bottom: 10,
-      left: 10,
+      left: 50,
       right: 10
     }
 
@@ -520,8 +520,8 @@ function update_bars(d, duration) {
 // Add the svg canvas for line graph
 var	line_graph = d3.select("#line_container")
 	.append("svg")
-		.attr("width", 500)
-		.attr("height", height/2 + margin.top + margin.bottom)
+		.attr("width", "100%")
+		.attr("height", height + margin.top + margin.bottom)
 	.append("g")
 		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -530,12 +530,13 @@ var	line_graph = d3.select("#line_container")
 const line_x = d3.scaleLinear().range([0,500]);
 const line_xAxis = d3.axisBottom()
   .scale(line_x)
+  .ticks(7)
   .tickFormat(function(d){
       const time_purchase = new Date(d * 1000).toLocaleString("en-US", {timeZone: "America/Vancouver"})
       return time_purchase});//will return 2015 for 0 2016 for 1 etc.
 
 line_graph.append("g")
-  .attr("transform", `translate(0, ${height/2})`)
+  .attr("transform", `translate(0, ${height/3})`)
   .attr("class","lineXaxis")
   
 // line_x.domain([0, 48]);
@@ -547,10 +548,18 @@ line_graph.append("g")
 //   .style("text-anchor", "end");
 
 // Initialize an Y axis
-const line_y = d3.scaleLinear().range([height/2, 0]);
-const line_yAxis = d3.axisLeft().scale(line_y);
+const line_y = d3.scaleLinear().range([height/3, 0]);
+const line_yAxis = d3.axisLeft()
+  .scale(line_y)
+  .ticks(5)
+// line_yAxis
+//   .selectAll("text")
+//     .attr("transform", "translate(-50)rotate(-45)")
+//     .style("text-anchor", "end");
+
 line_graph.append("g")
   .attr("class","lineYaxis")
+  // .attr("transform", "translate(-50)rotate(-45)")
 
 // var line_x = d3.scaleBand()
 //   .domain([0, 48])
@@ -558,9 +567,10 @@ line_graph.append("g")
 //   line_graph.append("g")
 //   .attr("transform", "translate(0," + height + ")")
 //   .call(d3.axisBottom(line_x))
-//   .selectAll("text")
-//     .attr("transform", "translate(-10,-20)rotate(-45)")
-//     .style("text-anchor", "end");
+// .attr("transform", "translate(-20)rotate(-45)")
+  // .selectAll("text")
+  //   .attr("transform", "translate(-50)rotate(-45)")
+  //   .style("text-anchor", "end");
 
 // // Add Y axis
 // var line_y = d3.scaleLinear()
@@ -600,7 +610,8 @@ function update_lines(data, duration) {
     .duration(duration)
     .call(line_xAxis)
     .selectAll("text")
-    .attr("transform", "translate(-10,-20)")
+    // .attr("transform", "translate(-10,-20)")
+    .attr("transform", "translate(-10)rotate(-45)")
     .style("text-anchor", "end");
 
   // create the Y axis
@@ -614,7 +625,7 @@ function update_lines(data, duration) {
     .duration(duration)
     .call(line_yAxis)
     .selectAll("text")
-    .attr("transform", "translate(10,0)")
+    .attr("transform", "translate(-20,0)")
     .style("text-anchor", "end");
 
   var profit_line = d3.line()
