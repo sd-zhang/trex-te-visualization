@@ -154,8 +154,8 @@
 Promise.all([
   d3.json("data/nodes.json"),
   d3.json("data/links.json"),
-  d3.csv("flows2.csv")
-  // d3.csv("20_training_market.csv")
+  // d3.csv("flows2.csv")
+  d3.csv("bt1_training_market.csv")
 ]).then(function(d) {
   // Add nodes
   rt_flow.append('g')
