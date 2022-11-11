@@ -1,0 +1,843 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hello World</title>
+  <!-- <style>* {padding: 0; margin: 0}</style> -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.4.4/d3.min.js" integrity="sha512-hnFpvCiJ8Fr1lYLqcw6wLgFUOEZ89kWCkO+cEekwcWPIPKyknKV1eZmSSG3UxXfsSuf+z/SgmiYB1zFOg3l2UQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://unpkg.com/d3-interpolate-path/build/d3-interpolate-path.min.js"></script>
+</head>
+<style type = "text/css">
+
+  /* body, html{
+      margin: 0;
+      padding: 0;
+      font-family: "Arial", sans-serif;
+      font-size: 11px;
+      text-align: center;
+    } */
+  
+  div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+  }
+  
+    /* #chart{
+      background-color: #1b1a1b;
+      border: 1px solid #CCC;
+    } */
+  
+    /* .yaxis path{
+      fill: none;
+      stroke: none;
+    }
+  
+    .yaxis line{
+      fill: none;
+      stroke: none;
+      stroke-width: 2px;
+      shape-rendering: crispEdges;
+      opacity: 0.7;
+      stroke-dasharray: 3,3;
+    } */
+  
+    /* .xaxis path,
+    .xaxis line{
+      fill: none;
+      stroke: none;
+    } */
+    
+    
+  
+</style>
+<body>
+<!-- Place all DOM elements here -->
+<div class="container-md">
+  <div class="row">
+    <div class="col-2 offset-2" id="pf_container"></div>
+    <div class="col-5 offset-1">
+      <div class="row">
+        <div class="col" id="bar_container"></div>
+      </div>
+      <div class="row">
+        <div class="col" id="line_container"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+
+  var w = 200;
+  var h = 400;
+
+  const margin = {
+      top: 10,
+      bottom: 10,
+      left: 50,
+      right: 10
+    }
+
+  var width = w - margin.left - margin.right;
+  var height = h - margin.top - margin.bottom;
+
+  var vis_start_time = 1433138400
+  var vis_end_time = 1000
+
+  const transition_time = {
+      top: 10,
+      bottom: 10,
+      left: 10,
+      right: 10
+    }
+
+  // setting up live data store for bar and line graphs
+  // var selected_node;
+  // var selected_node = 'r5';
+  var selected_node = null;
+  var last_time_purchase = {
+    net_profit: null,
+    nb_equiv: null};
+  // bar graph
+  const bar_data = {
+    default: [
+      {category: "Consumption", self: 1, battery: 2, community: 3, grid: 4},
+      {category: "Production", self: 5, battery: 6, community: 7, grid: 8}
+      // {category: "Battery", self: 9, community: 10, grid: 11}
+    ]
+  };
+
+  const line_data = {
+    default: {
+      from: {},
+      to: {}
+    }
+  };
+
+  // Define the div for the tooltip
+  // code example:
+  // https://bl.ocks.org/d3noob/180287b6623496dbb5ac4b048813af52
+  var tooltip_div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+  // Add the svg canvas for powerflow
+  // console.log(d3.select("#pf_container").node())
+  var rt_flow = d3.select("#pf_container")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+  
+  const map_xScale = d3.scaleLinear()
+    .domain([0, 2])
+    .range([ 0, width]);
+
+  // Add Y axis
+  const map_yScale = d3.scaleLinear()
+    .domain([0, 8])
+    .range([0, height]);
+  
+  var line = d3.line()
+    .x(function(d) { return d[0]; })
+    .y(function(d) { return d[1]; })
+
+Promise.all([
+  d3.json("data/nodes.json"),
+  d3.json("data/links.json"),
+  // d3.csv("flows2.csv")
+  d3.csv("bt1_training_market.csv")
+]).then(function(d) {
+  // Add nodes
+  rt_flow.append('g')
+  .selectAll("dot")
+  .data(d[0])
+  .join("circle")
+    .attr("id", function(d) { return d.label.toLowerCase()})
+    // .attr("type", function(d) { return d.label.toLowerCase()})
+    .attr("cx", function (d) { return map_xScale(d.x); } )
+    .attr("cy", function (d) { return map_yScale(d.y); } )
+    .attr("r", 5)
+    .style("fill", "#69b3a2")
+    .on("mouseover", function(event, d) {	
+      d3.select(this).transition()
+      .duration(100)
+      .attr("r", 10);
+    })					
+    .on("mouseout", function(event, d) {		
+      d3.select(this).transition()
+      .duration(100)
+      .attr("r", 5);	
+    })
+    .on("click", function(d) {
+        // var node_id =  d3.select(this).attr('id').substring(1);
+        // selected_node =  d3.select(this).attr('id');
+        // console.log(selected_node)
+        if (!(d3.select(this).attr('id') in bar_data)) {
+          init_bar_data(d3.select(this).attr('id'))
+        }
+        
+        if (!(d3.select(this).attr('id') in line_data)) {
+          init_line_data(d3.select(this).attr('id'))
+        }
+
+        selected_node =  d3.select(this).attr('id')
+        // console.log(selected_node)
+        
+        clearInterval(draw_timer);
+        update_bars(bar_data[selected_node], 1000)
+        update_lines(line_data[selected_node], 1000)
+        draw_timer = setInterval(drawBars, 1000)
+    })
+  // console.log('drawn nodes')
+  return d
+}).then(function(d){
+  //draw links
+  rt_flow.append('g')
+  .selectAll("path")
+  .data(d[1])
+  .join("path")
+    .attr("id", function(d) {
+      return (d.source + "-" + d.target).toLowerCase()
+    })
+    .attr("d", function(d) {
+      // transform the data into this format:
+      // [[0, 0], [1, 1]];
+      d.path = [d.source].concat(d.path, [d.target])
+      const path = line(d.path.map(x => [
+        d3.select("#"+x.toLowerCase()).attr("cx"),
+        d3.select("#"+x.toLowerCase()).attr("cy")]))
+      return path
+    })
+    .attr("stroke", "lightgrey")
+    .attr("stroke-width", 1)
+    .attr("fill", "none")
+    // console.log('drawn links')
+  return d
+}).then(function(d){
+  //draw reverselinks
+  rt_flow.append('g')
+  .selectAll("path")
+  .data(d[1])
+  .join("path")
+    .attr("id", function(d) {
+      return (d.target + "-" + d.source).toLowerCase()
+    })
+    .attr("d", function(d) {
+      d.path = [d.target].concat(d.path.reverse(), [d.source])
+      const path = line(d.path.map(x => [
+        d3.select("#"+x.toLowerCase()).attr("cx"),
+        d3.select("#"+x.toLowerCase()).attr("cy")]))
+      return path
+    })
+    .attr("opacity", 0)
+    // console.log('drawn reverse links')
+  return d
+}).then(function(d){
+  // setTimeout(1000)
+  //draw and animate energy transactions
+  // d.from = "r"+d.from
+  rt_flow.append('g')
+  .selectAll("circle")
+  // .data(d[2].filter(function(d){
+  //   return d.time_consumption 
+  // //   return d.time >= vis_start_time && d.time <= vis_end_time
+  // }))
+  .data(d[2])
+  .enter()
+  .append("circle")
+  .attr("class", "transaction")
+  .attr("r", 2)
+  // .attr("r", function(d){return Math.max(2, d.quantity / 5)})
+  .attr("r", function(d){return Math.max(2, d.quantity / 900)})
+  // .attr("id", function(d){return d.id})
+  // .attr("cx", function (d) {return d3.select("#" + d.seller_id.toLowerCase()).attr("cx")})
+  // .attr("cy", function (d) {return d3.select("#" + d.seller_id.toLowerCase()).attr("cy")})
+
+  // .attr("r", function(d){return 2 + d.quantity / 10})
+  .attr("path_id", function(d){
+    const from = d.seller_id.toLowerCase()
+    const to = d.buyer_id.toLowerCase()
+    const path_id = "#" + from + "-" + to
+    return path_id})
+  .attr("time", function(d){
+    return (d.time_purchase - vis_start_time)/3600
+  })
+  .attr("visible", function(d){
+    // return d.time_consumption
+    // console.log(d.seller_id == d.buyer_id)
+    return (d.time_consumption != "" && (d.seller_id != d.buyer_id))
+  })
+  .style("fill", function(d){
+    if (d.energy_source == "solar"){
+      // if (d.seller_id == d.buyer_id){
+        // console.log(d3.select(this).attr("visible"))
+        // return "orange"
+      // }
+      return "blue"
+    }
+    return "red"
+  })
+  .attr("transform", "translate(" + 0 + ")")
+  .style("opacity", 0)
+  // if (function(d){return d.time_consumption})
+  transition_circles();
+  function transition_circles(){
+    var circle = d3.selectAll(".transaction")
+    // console.log(circle)
+    circle.each(function(pathItem, index){
+      // console.log(animate)
+      const moveDuration = 5000
+      const moveDelay = (index * 10) + d3.select(this).attr("time") * moveDuration * 0.8
+      // console.log(index, d3.select(this).attr("time"), moveDelay)
+      const path = d3.select(d3.select(this).attr("path_id"))
+      // console.log(d3.select(this).attr("path_id"))
+      d3.select(this)
+      .transition()
+      .ease(d3.easeLinear)
+      .delay(moveDelay)
+      .duration(moveDuration)
+      .on("start", function(d){
+        if (d3.select(this).attr("visible") === "true"){
+          d3.select(this).style("opacity", 1)
+        }
+
+        // if (!(d.from in bar_data)){
+        //   init_bar_data(d.from)
+        // }
+        // bar_data[d.from][0].value += Number(d.size)
+
+        // if (!(d.from in line_data)) {
+        // init_line_data(d.from)
+        // // console.log(d.time)
+        // }
+        
+        // if (!(d.time in line_data[d.from].from)) {
+        //   line_data[d.from].from[d.time] = Number(d.size)
+        // }
+        // else {
+        //   line_data[d.from].from[d.time] += Number(d.size)
+        // }
+      })
+      .on("end",function(d){
+        d3.select(this).remove()
+        
+        //update bar graph
+        // {category: "Consumption", self: 0, battery: 0, community: 0, grid: 0},
+        // {category: "Solar Production", self: 0, battery: 0, community: 0, grid: 0},
+        // {category: "Battery", self: 0, community: 0, grid: 0}
+        
+        // if (!(seller_id in line_data)){init_line_data(seller_id)}
+        // if (!(buyer_id in line_data)){init_line_data(buyer_id)}
+        update_bar_data(d)
+        update_line_data(d)
+        // calculate_profits(d, "net_profit")
+        // calculate_profits(d, "nb_equiv")
+      })
+// now the element is loaded
+      .tween("pathTween", function(){return pathTween(d3.select(this).attr("path_id"))
+      })
+    })
+  }
+  function pathTween(path_id){
+    const from_to = path_id.slice(1).split("-")
+    // const observer = new MutationObserver((mutations, obs) => {
+    //   const path_exists = document.getElementById('path_id');
+    //   if (path_exists) {
+    //     // console.log(hello.innerText)
+    //     obs.disconnect();
+    //     return;
+    //   }
+    // });
+    const path = d3.select(path_id)
+
+    if (from_to[0] == from_to[1]){
+      return
+    }
+    var length = path.node().getTotalLength(); // Get the length of the path
+    var r = d3.interpolate(0, length); //Set up interpolation from 0 to the path length
+    return function(t){
+      var point = path.node().getPointAtLength(r(t)); // Get the next point along the path
+      d3.select(this) // Select the circle
+        .attr("cx", point.x) // Set the cx
+        .attr("cy", point.y) // Set the cy
+    }
+  }
+  // console.log('drawn flows')
+}).then(function(d){
+  // setTimeout(3000)
+  //redraw nodes to the right symbols
+  return d
+}).catch(function(err) {
+    // handle error here
+})
+
+// Bars
+// Add the svg canvas for bar graph
+var	bar_graph = d3.select("#bar_container")
+	.append("svg")
+		.attr("width", "100%")
+		.attr("height", height/2 + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Y axis
+var bar_y = d3.scaleBand()
+  .range([ 0, height/2 ])
+  .domain(bar_data.default.map(function(d) { return d.category; }))
+  .padding(0.2);
+
+bar_graph.append("g")
+  .attr("class","barYaxis")
+
+bar_graph.select('.domain')
+  .attr('stroke-width', 0);
+  // .attr("transform", "translate(0," + height + ")")
+  // .call(d3.axisLeft(bar_y))
+  // .selectAll("text")
+  //   .attr("transform", "translate(0,-20)rotate(-45)")
+  //   .style("text-anchor", "end");
+
+// Add X axis
+var bar_x = d3.scaleLinear()
+  .domain([0, 1])
+  .range([ width * 3, 0]);
+  bar_graph.append("g")
+  // .call(d3.axisLeft(y));
+
+// A function that create / update the plot for a given variable:
+function init_bar_data(node_id) {
+  bar_data[node_id] = [
+    {category: "Consumption", self: 0, battery: 0, community: 0, grid: 0},
+    {category: "Production", self: 0, battery: 0, community: 0, grid: 0}
+    // {category: "Battery", self: 0, community: 0, grid: 0}
+  ]
+}
+
+// Transpose the data into layers
+// var dataset = d3.stack().keys(["self", "battery", "community", "grid"])(bar_data.default)
+
+
+// .map(function(fruit) {
+//   return bar_data.default.map(function(d) {
+//     return {x: d.category, y: +d[fruit]};
+//   });
+// }));
+// console.log(bar_data.default)
+// console.log(dataset)
+var bar_colors = ["#5BE2EC", "#B0FF00", "#F7498D", "#5A5A5A"];
+// https://d3-graph-gallery.com/graph/barplot_stacked_percent.html
+// http://bl.ocks.org/mstanaland/6100713
+// https://stackoverflow.com/questions/70490586/d3-stacked-bar-chart-with-3-columns-of-data
+function update_bars(d, duration) {
+  // console.log(bar_data)
+  // console.log(data)
+  var dataset = d3.stack()
+    .offset(d3.stackOffsetExpand)
+    .order(d3.stackOrderReverse)
+    .keys(["self", "battery", "community", "grid"])
+    .value((d, key) => d[key] ?? 0)
+    (bar_data[selected_node])
+
+  var groups = bar_graph.selectAll("g.cost")
+    .data(dataset)
+    .join('g')
+    .attr("class", "cost")
+    .style("fill", function(d, i) { return bar_colors[i]; });
+
+  groups.selectAll("rect")
+    .data(d => d)
+    .join("rect")
+      .transition()
+      .duration(duration)
+      .attr('y', d => bar_y(d.data.category))
+      .attr('x', d => bar_x(d[1]))
+      .attr('height', bar_y.bandwidth()/2)
+      // 'width', x0.rangeBand() / barData.length - groupSpacing
+      .attr('width', d => bar_x(d[0]) - bar_x(d[1]))
+      .attr("transform", "translate(5, 0)")
+    // .attr("fill", "#69b3a2")
+  bar_graph.selectAll(".barYaxis")
+    .transition()
+    .duration(duration)
+    .call(d3.axisLeft(bar_y))
+    // .call(bar_graph => bar_graph.select(".domain").remove())
+    .selectAll("text")
+    .attr("transform", "translate(0,-20)rotate(-45)")
+    .style("text-anchor", "end");
+  
+  groups.selectAll(".bar_text").remove();
+  groups.append("text")
+    .attr("class", "bar_text")
+    // .attr("x", 12)
+    .attr("y", bar_y.bandwidth() * 1.2)
+    .attr("text-anchor", "left")
+    .attr("transform", "translate(10, 0)")
+
+    // .attr("transform", "translate(-10,-20)")
+    .text(function(d) { 
+      // console.log(d[0].data.self)
+      var text = []
+      if (d[0].data.self > 0){
+        text.push(d[0].data.self + "Wh from self")
+      }
+      if (d[0].data.battery > 0){
+        text.push(d[0].data.battery + "Wh from battery")
+      }
+      if (d[0].data.community > 0){
+        text.push(d[0].data.community + "Wh from community")
+      }
+      if (d[0].data.grid > 0){
+        text.push(d[0].data.grid + "Wh from grid")
+      }
+
+      return  text.join(" | ")
+    })
+    .style("fill", "#000000")
+    .style("font-size", "0.7em");
+
+  groups.append("text")
+    .attr("class", "bar_text")
+    // .attr("x", 12)
+    .attr("y", bar_y.bandwidth() * 2.4)
+    .attr("text-anchor", "left")
+    .attr("transform", "translate(10, 0)")
+
+    // .attr("transform", "translate(-10,-20)")
+    .text(function(d) { 
+      // console.log(d[1].data)
+      var text = []
+      if (d[1].data.self > 0){
+        text.push(d[0].data.self + "Wh consumed")
+      }
+      if (d[1].data.battery > 0){
+        text.push(d[1].data.battery + "Wh stored")
+      }
+      if (d[1].data.community > 0){
+        text.push(d[1].data.community + "Wh to community")
+      }
+      if (d[1].data.grid > 0){
+        text.push(d[1].data.grid + "Wh to grid")
+      }
+
+      return  text.join(" | ")
+    })
+    .style("fill", "#000000")
+    .style("font-size", "0.7em");
+}
+
+// Lines
+// Add the svg canvas for line graph
+var	line_graph = d3.select("#line_container")
+	.append("svg")
+		.attr("width", "100%")
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// X axis
+// create a X axis:
+const line_x = d3.scaleLinear().range([0,500]);
+const line_xAxis = d3.axisBottom()
+  .scale(line_x)
+  .ticks(7)
+  .tickFormat(function(d){
+      const time_purchase = new Date(d * 1000).toLocaleString("en-US", {timeZone: "America/Vancouver"})
+      return time_purchase});//will return 2015 for 0 2016 for 1 etc.
+
+line_graph.append("g")
+  .attr("transform", `translate(0, ${height/3})`)
+  .attr("class","lineXaxis")
+  
+// line_x.domain([0, 48]);
+// line_graph.selectAll(".lineXaxis")
+//   // .duration(duration)
+//   .call(line_xAxis)
+//   .selectAll("text")
+//   .attr("transform", "translate(-10,-20)")
+//   .style("text-anchor", "end");
+
+// Initialize an Y axis
+const line_y = d3.scaleLinear().range([height/3, 0]);
+const line_yAxis = d3.axisLeft()
+  .scale(line_y)
+  .ticks(5)
+// line_yAxis
+//   .selectAll("text")
+//     .attr("transform", "translate(-50)rotate(-45)")
+//     .style("text-anchor", "end");
+
+line_graph.append("g")
+  .attr("class","lineYaxis")
+
+// line_graph.append("circle").attr("cx",250).attr("cy",0).attr("r", 6).style("fill", "#69b3a2")
+// line_graph.append("circle").attr("cx",250).attr("cy",20).attr("r", 6).style("fill", "#404080")
+// line_graph.append("text").attr("x", 270).attr("y", 0).text("ALEX").style("font-size", "11px").attr("alignment-baseline","middle")
+// line_graph.append("text").attr("x", 270).attr("y", 20).text("Net Billing").style("font-size", "11px").attr("alignment-baseline","middle")
+
+  // .attr("transform", "translate(-50)rotate(-45)")
+
+// var line_x = d3.scaleBand()
+//   .domain([0, 48])
+//   .range([0, 1000]);
+//   line_graph.append("g")
+//   .attr("transform", "translate(0," + height + ")")
+//   .call(d3.axisBottom(line_x))
+// .attr("transform", "translate(-20)rotate(-45)")
+  // .selectAll("text")
+  //   .attr("transform", "translate(-50)rotate(-45)")
+  //   .style("text-anchor", "end");
+
+// // Add Y axis
+// var line_y = d3.scaleLinear()
+//   .domain([0, 20])
+//   .range([0, height]);
+//   line_graph.append("g")
+//   .call(d3.axisLeft(line_y))
+//   .selectAll("text")
+//     .attr("transform", "translate(10,0)")
+//     .style("text-anchor", "end");
+
+function init_line_data(node_id) {
+  line_data[node_id] = {
+    net_profit: {},
+    nb_equiv: {}
+    // to: {}
+  }
+}
+
+// const data1 = [
+//    {x: 0.3, y: 4},
+//    {x: 2, y: 16},
+//    {x: 3, y: 8}
+// ];
+
+function update_lines(data, duration) {
+  net_profit_data = Object.entries(data.net_profit).map(([x, y]) => ({x, y}))
+  nb_equiv_data = Object.entries(data.nb_equiv).map(([x, y]) => ({x, y}))
+  // console.log(result)
+
+  // Create the X axis:
+  line_x.domain([
+    d3.min(net_profit_data, function(d) {return d.x}), 
+    d3.max(net_profit_data, function(d) {return d.x})
+  ]);
+  line_graph.selectAll(".lineXaxis").transition()
+    .duration(duration)
+    .call(line_xAxis)
+    .selectAll("text")
+    // .attr("transform", "translate(-10,-20)")
+    .attr("transform", "translate(-10)rotate(-45)")
+    .style("text-anchor", "end");
+
+  // create the Y axis
+  line_y.domain([
+    // Math.min(
+    d3.min(net_profit_data, function(d){return d.y}),
+      // d3.min(nb_equiv_data, function(d){return d.y}))
+    
+    // , 
+    d3.max(net_profit_data, function(d){return d.y})
+  ]);
+
+  line_graph.selectAll(".lineYaxis")
+    .transition()
+    .duration(duration)
+    .call(line_yAxis)
+    .selectAll("text")
+    .attr("transform", "translate(-20,0)")
+    .style("text-anchor", "end");
+
+  var profit_line = d3.line()
+    .x(function(d) { return line_x(d.x); })
+    .y(function(d) { return line_y(d.y); });
+
+  var v = line_graph.selectAll(".nbe_line")
+    .data([nb_equiv_data], function(d){return d.x})
+  v
+  // line_graph
+  .enter()
+  .append("path")
+  .attr("class", "nbe_line")
+  .merge(v)
+  .transition()
+  // .delay(200)
+  .duration(duration)
+  .attr("d", profit_line)
+  .attr("fill", "none")
+  .attr("stroke", "orange")
+  .attr("stroke-width", 2.5)
+
+  var u = line_graph.selectAll(".np_line")
+    .data([net_profit_data], function(d){return d.x})
+  u
+  // line_graph
+  .enter()
+  .append("path")
+  .attr("class", "np_line")
+  .merge(u)
+  .transition()
+  .duration(duration)
+  .attr("d", profit_line)
+  .attr("fill", "none")
+  .attr("stroke", "steelblue")
+  .attr("stroke-width", 2.5)
+
+  line_graph.selectAll(".line_legend").remove();
+  line_graph.append("circle")
+    .attr("class", "line_legend")
+    .attr("cx",250)
+    .attr("cy",0)
+    .attr("r", 6)
+    .style("fill", "steelblue")
+
+  line_graph.append("circle")
+    .attr("class", "line_legend")
+    .attr("cx",250)
+    .attr("cy",20)
+    .attr("r", 6)
+    .style("fill", "orange")
+
+  line_graph.append("text")
+    .attr("class", "line_legend")
+    .attr("x", 270)
+    .attr("y", 0)
+    .text("ALEX")
+    .style("font-size", "11px")
+    .attr("alignment-baseline","middle")
+
+  line_graph.append("text")
+    .attr("class", "line_legend")
+    .attr("x", 270)
+    .attr("y", 20)
+    .text("Net Billing")
+    .style("font-size", "11px")
+    // .style("outline: thin solid red")
+    .attr("alignment-baseline","middle")
+}
+
+  // data.map(d => {
+  //   return {
+  //     date: Object.keys(d)[0],
+  //     count: d[Object.keys(d)[0]]
+  //   }
+  // });
+// }
+
+// init_bar_data(selected_node)
+// update_bars(bar_data[selected_node], 0)
+// update_lines(data1, 0)
+function update_bar_data(d){
+  const seller_id = d.seller_id.toLowerCase()
+  const buyer_id = d.buyer_id.toLowerCase()
+  const quantity = Number(d.quantity)
+
+  if (!(seller_id in bar_data)){init_bar_data(seller_id)}
+  if (!(buyer_id in bar_data)){init_bar_data(buyer_id)}
+
+  // function update_bar_data(d){
+  if (buyer_id == seller_id){
+    bar_data[buyer_id][0].self += quantity
+    bar_data[seller_id][1].self += quantity
+  }
+  else if (buyer_id != "grid" && seller_id != "grid"){
+    bar_data[buyer_id][0].community += quantity
+    bar_data[seller_id][1].community += quantity
+  }
+  else{
+    bar_data[buyer_id][0].grid += quantity
+    bar_data[seller_id][1].grid += quantity
+  }
+}
+
+function drawBars(){
+  if (selected_node in bar_data){
+    update_bars(bar_data[selected_node], 500)
+  }
+
+  if (selected_node in line_data){
+    // result = Object.entries(line_data[selected_node].net_profit).map(([x, y]) => ({x, y}))
+    // console.log(result)
+    update_lines(line_data[selected_node], 500)
+    // update_lines(bar_data[selected_node], 100)
+  }
+}
+
+function calculate_profits(d){
+  var last_net_profit_buyer = (typeof last_net_profit_buyer === 'undefined') ? 0 : last_net_profit_buyer
+  var last_net_profit_seller = (typeof last_net_profit_seller === 'undefined') ? 0 : last_net_profit_seller
+  // var last_net_profit_seller = 0
+  const time_purchase = d.time_purchase
+  const cost = d.settlement_price_buy * d.quantity
+  const profit = d.settlement_price_sell * d.quantity
+
+  if (!(time_purchase in line_data[d.buyer_id].net_profit)){
+    line_data[d.buyer_id].net_profit[time_purchase] = last_net_profit_buyer - cost
+  }
+  else{
+    line_data[d.buyer_id].net_profit[time_purchase] -= cost
+  }
+
+  if (!(time_purchase in line_data[d.seller_id].net_profit)){
+    line_data[d.seller_id].net_profit[time_purchase] = last_net_profit_seller + profit
+  }
+  else{
+    line_data[d.seller_id].net_profit[time_purchase] += profit
+  }
+  last_time_purchase.net_profit = time_purchase
+}
+
+function calculate_nb_equiv(d){
+  var last_net_profit_buyer = (typeof last_net_profit_buyer === 'undefined') ? 0 : last_net_profit_buyer
+  var last_net_profit_seller = (typeof last_net_profit_seller === 'undefined') ? 0 : last_net_profit_seller
+  const time_purchase = d.time_consumption
+
+  // console.log(time_purchase, time_purchase !== "")
+  if (time_purchase != ""){
+    const cost = 0.069*2.1 * d.quantity
+    const profit = 0.069 * d.quantity
+
+    if (!(time_purchase in line_data[d.buyer_id].nb_equiv)){
+      line_data[d.buyer_id].nb_equiv[time_purchase] = last_net_profit_buyer - cost
+    }
+    else{
+      line_data[d.buyer_id].nb_equiv[time_purchase] -= cost
+    }
+
+    if (!(time_purchase in line_data[d.seller_id].nb_equiv)){
+      line_data[d.seller_id].nb_equiv[time_purchase] = last_net_profit_seller + profit
+    }
+    else{
+      line_data[d.seller_id].nb_equiv[time_purchase] += profit
+    }
+    last_time_purchase.nb_equiv = time_purchase
+  }
+}
+
+function update_line_data(d){
+  d.seller_id = d.seller_id.toLowerCase()
+  d.buyer_id = d.buyer_id.toLowerCase()
+  d.quantity = Number(d.quantity)
+  if (!(d.seller_id in line_data)){init_line_data(d.seller_id)}
+  if (!(d.buyer_id in line_data)){init_line_data(d.buyer_id)}
+
+  calculate_profits(d)
+  calculate_nb_equiv(d)
+}
+
+var draw_timer = setInterval(drawBars, 1000)
+// update_bars(bar_data.default, 0)
+// clearInterval(timer);
+  
+</script>
+</body>
+</html>
